@@ -58,8 +58,8 @@ AssemblyDef* PELib::EmptyWorkingAssembly(const std::string& AssemblyName)
 bool PELib::DumpOutputFile(const std::string& file, OutputMode mode, bool gui)
 {
     bool rv;
-    outputStream_ = std::make_unique<std::fstream>(file.c_str(), std::ios::in | std::ios::out | std::ios::trunc |
-                                                       (mode == ilasm || mode == object ? std::ios::in : std::ios::binary));
+    outputStream_ = std::unique_ptr<std::iostream>( new std::fstream(file.c_str(), std::ios::in | std::ios::out | std::ios::trunc |
+                     (mode == ilasm || mode == object ? std::ios::in : std::ios::binary)) );
     switch (mode)
     {
         case ilasm:
