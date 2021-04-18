@@ -701,7 +701,14 @@ bool PELib::DumpPEFile(std::string file, bool isexe, bool isgui)
     WorkingAssembly()->Number(n);  // give initial PE Indexes for field resolution..
 
     peWriter_ = new PEWriter(isexe, isgui, WorkingAssembly()->SNKFile());
-    size_t moduleIndex = peWriter_->HashString("Module");
+
+    // RK: Unhandled Exception on Mono 3 and 5:
+    // System.TypeLoadException: Could not load type 'Module' from assembly 'test6, Version=0.0.0.0, Culture=neutral,
+    // PublicKeyToken=null'.
+    // [ERROR] FATAL UNHANDLED EXCEPTION: System.TypeLoadException: Could not load type 'Module' from assembly 'test6,
+    // Version=0.0.0.0, Culture=neutral, PublicKeyToken=null'.
+    size_t moduleIndex = peWriter_->HashString("<Module>"); // RK fix: "<Module>" instead of "Module" fixes the issue
+
     TypeDefOrRef typeDef(TypeDefOrRef::TypeDef, 0);
     TableEntryBase* table = new TypeDefTableEntry(0, moduleIndex, 0, typeDef, 1, 1);
     peWriter_->AddTableEntry(table);
