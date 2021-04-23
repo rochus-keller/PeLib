@@ -64,6 +64,9 @@ namespace DotNetPELib {
     // vector of tables that can appear in a PE file
     // empty tables are elided
     typedef std::vector<TableEntryBase *> DNLTable;
+    typedef unsigned short Word; /* two bytes */
+    typedef unsigned DWord; /* four bytes */
+    typedef unsigned long long ulonglong;
 
     // constants related to the tables in the PE file
     enum

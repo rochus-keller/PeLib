@@ -22,7 +22,7 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "CustomAttributeContainer.h"
 #include "PEFile.h"
 
 namespace DotNetPELib

@@ -7,6 +7,12 @@ TEMPLATE = app
 
 CONFIG += c++11 # use of auto
 
+CONFIG(debug, debug|release) {
+        DEFINES += _DEBUG
+}
+
+INCLUDEPATH += ..
+
 HEADERS += \
     bigdigits.h \
     bigdtypes.h \
@@ -17,7 +23,27 @@ HEADERS += \
     RSAEncoder.h \
     PEHeader.h \
     sha1.h \
-    targetver.h
+    targetver.h \
+    Qualifiers.h \
+    PELibError.h \
+    CodeContainer.h \
+    DataContainer.h \
+    CustomAttributeContainer.h \
+    AssemblyDef.h \
+    Namespace.h \
+    Property.h \
+    Class.h \
+    Method.h \
+    Field.h \
+    Enum.h \
+    Allocator.h \
+    Operand.h \
+    Instruction.h \
+    Value.h \
+    MethodSignature.h \
+    Type.h \
+    Callback.h \
+    Resource.h
 
 SOURCES += \
     Allocator.cpp \
@@ -34,7 +60,7 @@ SOURCES += \
     Instruction.cpp \
     Method.cpp \
     MethodSignature.cpp \
-    NameSpace.cpp \
+    Namespace.cpp \
     NetSignature.cpp \
     Operand.cpp \
     PECor20Headers.cpp \
@@ -48,7 +74,8 @@ SOURCES += \
     sha1.cpp \
     Type.cpp \
     Value.cpp \
-    test.cpp
+    test.cpp \
+    Resource.cpp
 
 DISTFILES +=
 

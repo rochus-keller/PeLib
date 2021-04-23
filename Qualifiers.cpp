@@ -22,6 +22,7 @@
  *
  */
 
+#include "Qualifiers.h"
 #include "DotNetPELib.h"
 namespace DotNetPELib
 {

@@ -22,7 +22,7 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "Field.h"
 #include "PEFile.h"
 #include <iomanip>
 namespace DotNetPELib
@@ -44,6 +44,11 @@ void Field::AddInitializer(Byte* bytes, int len)
         byteValue_ = bytes;
         byteLength_ = len;
     }
+}
+
+bool Field::InAssemblyRef() const
+{
+    return parent_->InAssemblyRef();
 }
 bool Field::ILSrcDumpTypeName(PELib& peLib, Field::ValueSize size)
 {

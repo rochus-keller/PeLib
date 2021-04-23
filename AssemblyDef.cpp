@@ -22,7 +22,7 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "AssemblyDef.h"
 #include "PEFile.h"
 #include "sha1.h"
 #include <climits>

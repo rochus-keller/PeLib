@@ -22,7 +22,7 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "Enum.h"
 #include "PEFile.h"
 namespace DotNetPELib
 {

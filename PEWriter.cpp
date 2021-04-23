@@ -28,6 +28,8 @@
 #include "PEHeader.h"
 #include <time.h>
 #include <stdio.h>
+#include <iostream>
+
 namespace DotNetPELib
 {
 

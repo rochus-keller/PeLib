@@ -22,11 +22,21 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "DataContainer.h"
+#include "Callback.h"
 #include "PEFile.h"
 #include <typeinfo>
 namespace DotNetPELib
 {
+void DataContainer::Add(CodeContainer* item)
+{
+    if (item)
+    {
+        item->SetContainer(this);
+        methods_.push_back(item);
+    }
+}
+
 void DataContainer::Add(Field* field)
 {
     if (field)

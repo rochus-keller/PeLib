@@ -22,7 +22,7 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "Operand.h"
 #include "PEFile.h"
 #include <iomanip>
 

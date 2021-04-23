@@ -22,7 +22,7 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "Method.h"
 #include "PEFile.h"
 #include <search.h>
 #include <stdio.h>

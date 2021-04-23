@@ -23,6 +23,7 @@
  */
 
 #include "DotNetPELib.h"
+#include "Callback.h"
 #include "PEFile.h"
 #include "DLLExportReader.h"
 

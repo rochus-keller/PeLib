@@ -22,10 +22,13 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "Instruction.h"
+#include "DotNetPELib.h" // TODO
 #include <float.h>
 namespace DotNetPELib
 {
+typedef unsigned DWord; /* four bytes */
+
 Instruction::InstructionName Instruction::instructions_[] = {
     {"<unknown>", 0, (Byte)-1, 0, o_none, 0},
     {".label", 0, (Byte)-1, 0, o_none, 0},
@@ -266,6 +269,14 @@ Instruction::Instruction(iop Op, Operand* Oper) : op_(Op), switches_(nullptr), l
     operand_ = Oper;
 }
 void Instruction::NullOperand(Allocator& allocator) { operand_ = allocator.AllocateOperand(); }
+
+std::string Instruction::Label() const
+{
+    if (operand_)
+        return operand_->StringValue();
+    else
+        return "";
+}
 int Instruction::InstructionSize()
 {
     if (op_ == i_switch)

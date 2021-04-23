@@ -22,7 +22,7 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "MethodSignature.h"
 #include "PEFile.h"
 #include <stdio.h>
 #include <sstream>
@@ -76,6 +76,16 @@ bool MethodSignature::Matches(std::vector<Type*> args)
         return true;
     }
     return false;
+}
+
+void MethodSignature::AddParam(Param* param)
+{
+    if (varargParams_.size())
+    {
+        throw PELibError(PELibError::VarargParamsAlreadyDeclared);
+    }
+    param->Index(params.size());
+    params.push_back(param);
 }
 
 void MethodSignature::AddVarargParam(Param* param)

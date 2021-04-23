@@ -22,7 +22,7 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "Value.h"
 #include "PEFile.h"
 namespace DotNetPELib
 {

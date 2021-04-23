@@ -26,6 +26,8 @@
 #include <new>
 namespace DotNetPELib
 {
+typedef unsigned short Word; /* two bytes */
+typedef unsigned DWord; /* four bytes */
 
 AssemblyDef* Allocator::AllocateAssemblyDef(const std::string& Name, bool External, Byte* KeyToken)
 {

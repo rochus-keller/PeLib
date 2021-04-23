@@ -22,7 +22,7 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "CodeContainer.h"
 #include "PEFile.h"
 #include <typeinfo>
 namespace DotNetPELib

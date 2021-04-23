@@ -22,7 +22,8 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "Class.h"
+#include "Callback.h"
 #include "PEFile.h"
 #include <typeinfo>
 #include <climits>
@@ -518,4 +519,14 @@ bool Class::MatchesGeneric(std::deque<Type*>* generics) const
     }
     return false;
 }
+
+void DotNetPELib::Class::Add(DotNetPELib::Property* property, bool add)
+{
+    if (property)
+    {
+        property->SetContainer(this, add);
+        properties_.push_back(property);
+    }
+}
+
 }  // namespace DotNetPELib

@@ -22,7 +22,7 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "Property.h"
 #include "PEFile.h"
 #include <typeinfo>
 #include <sstream>
