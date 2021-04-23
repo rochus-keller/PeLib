@@ -1,4 +1,13 @@
-#include "DotNetPELib.h"
+#include "PELib.h"
+#include "MethodSignature.h"
+#include "Type.h"
+#include "Qualifiers.h"
+#include "Method.h"
+#include "AssemblyDef.h"
+#include "Instruction.h"
+#include "Operand.h"
+#include "Value.h"
+#include "PELibError.h"
 #include <QCoreApplication>
 #include <QtDebug>
 using namespace DotNetPELib;
@@ -11,9 +20,9 @@ int main()
 
     peFile.LoadAssembly("mscorlib");
 
-    MethodSignature* sigMain = peFile.AllocateMethodSignature("$Main",MethodSignature::Managed, assembly);
-    sigMain->ReturnType(peFile.AllocateType(Type::Void, 0));
-    Method* methMain = peFile.AllocateMethod( sigMain, Qualifiers::Private |
+    MethodSignature* sigMain = new MethodSignature("$Main",MethodSignature::Managed, assembly);
+    sigMain->ReturnType(new Type(Type::Void, 0));
+    Method* methMain = new Method( sigMain, Qualifiers::Private |
                                                         Qualifiers::Static |
                                                         Qualifiers::HideBySig |
                                                         Qualifiers::CIL |
@@ -35,13 +44,13 @@ int main()
     }
 
     methMain->AddInstruction(
-                peFile.AllocateInstruction(Instruction::i_ldstr,
-                                             peFile.AllocateOperand("Hi there!", true)));
+                new Instruction(Instruction::i_ldstr,
+                                             new Operand("Hi there!", true)));
     methMain->AddInstruction(
-                peFile.AllocateInstruction(Instruction::i_call,
-                                             peFile.AllocateOperand(peFile.AllocateMethodName(sigWriteLine))));
+                new Instruction(Instruction::i_call,
+                                             new Operand(new MethodName(sigWriteLine))));
     methMain->AddInstruction(
-                peFile.AllocateInstruction(Instruction::i_ret, nullptr));
+                new Instruction(Instruction::i_ret, nullptr));
 
     try
     {

@@ -24,6 +24,10 @@
 
 #include "Operand.h"
 #include "PEFile.h"
+#include "Operand.h"
+#include "Value.h"
+#include "Instruction.h"
+#include "PELibError.h"
 #include <iomanip>
 
 namespace DotNetPELib
@@ -222,13 +226,13 @@ Operand* Operand::ObjIn(PELib& peLib)
     {
         case t_none:  // no operand, nothing to display
         default:
-            rv = peLib.AllocateOperand();
+            rv = new Operand();
             break;
         case t_value:
             ch = peLib.ObjChar();
             if (ch != ',')
                 peLib.ObjError(oe_syntax);
-            rv = peLib.AllocateOperand(Value::ObjIn(peLib));
+            rv = new Operand(Value::ObjIn(peLib));
             break;
         case t_int:
             ch = peLib.ObjChar();
@@ -238,7 +242,7 @@ Operand* Operand::ObjIn(PELib& peLib)
             ch = peLib.ObjChar();
             if (ch != ',')
                 peLib.ObjError(oe_syntax);
-            rv = peLib.AllocateOperand(peLib.ObjInt(), sz);
+            rv = new Operand(peLib.ObjInt(), sz);
             break;
         case t_real:
         {
@@ -268,12 +272,12 @@ Operand* Operand::ObjIn(PELib& peLib)
             if (sz == r4)
             {
                 sz1 = 4;
-                rv = peLib.AllocateOperand(*(float*)buf, sz);
+                rv = new Operand(*(float*)buf, sz);
             }
             else
             {
                 sz1 = 8;
-                rv = peLib.AllocateOperand(*(double*)buf, sz);
+                rv = new Operand(*(double*)buf, sz);
             }
         }
         break;
@@ -283,7 +287,7 @@ Operand* Operand::ObjIn(PELib& peLib)
             if (ch != ',')
                 peLib.ObjError(oe_syntax);
             std::string test = peLib.UnformatName();
-            rv = peLib.AllocateOperand(test, true);
+            rv = new Operand(test, true);
         }
         break;
         case t_label:
@@ -292,7 +296,7 @@ Operand* Operand::ObjIn(PELib& peLib)
             if (ch != ',')
                 peLib.ObjError(oe_syntax);
             std::string test = peLib.UnformatName();
-            rv = peLib.AllocateOperand(test);
+            rv = new Operand(test);
         }
         break;
     }

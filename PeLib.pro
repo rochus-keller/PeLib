@@ -17,7 +17,7 @@ HEADERS += \
     bigdigits.h \
     bigdtypes.h \
     DLLExportReader.h \
-    DotNetPELib.h \
+    PELib.h \
     MZHeader.h \
     PEFile.h \
     RSAEncoder.h \
@@ -36,7 +36,6 @@ HEADERS += \
     Method.h \
     Field.h \
     Enum.h \
-    Allocator.h \
     Operand.h \
     Instruction.h \
     Value.h \
@@ -46,7 +45,6 @@ HEADERS += \
     Resource.h
 
 SOURCES += \
-    Allocator.cpp \
     AssemblyDef.cpp \
     bigdigits.cpp \
     Class.cpp \

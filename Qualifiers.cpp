@@ -23,7 +23,11 @@
  */
 
 #include "Qualifiers.h"
-#include "DotNetPELib.h"
+#include "PELib.h"
+#include <iostream>
+#include "DataContainer.h"
+#include "Class.h"
+#include "AssemblyDef.h"
 namespace DotNetPELib
 {
 const char* Qualifiers::qualifierNames_[] = {"public",

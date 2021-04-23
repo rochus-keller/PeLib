@@ -3,6 +3,9 @@
 
 #include <PeLib/Resource.h>
 #include <deque>
+#include <vector>
+#include <string>
+#include <list>
 
 namespace DotNetPELib
 {
@@ -26,7 +29,7 @@ namespace DotNetPELib
     // list, including the ability to specify an arbitrary number of params.
     // When these are passed about in a program you generate you may need to box
     // simple values to fit them in the array...
-    class MethodSignature : public DestructorBase
+    class MethodSignature : public Resource
     {
     public:
         enum { Vararg = 1, Managed = 2, InstanceFlag = 4 };

@@ -22,7 +22,7 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "PELibError.h"
 namespace DotNetPELib
 {
 const char* PELibError::errorNames[] = {

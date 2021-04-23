@@ -22,8 +22,17 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "Type.h"
+#include "Class.h"
+#include "MethodSignature.h"
+#include "Value.h"
+#include "AssemblyDef.h"
+#include "Field.h"
+#include "Property.h"
+#include "Method.h"
 #include "PEFile.h"
+
+// TODO: separate SignatureGenerator h/cpp
 
 namespace DotNetPELib
 {
@@ -300,7 +309,7 @@ Type* SignatureGenerator::TypeFromTypeRef(PELib& lib, AssemblyDef& assembly, PER
         std::string name = LoadClassName(reader, index, nullptr, true);
         std::string nameSpace = LoadNameSpaceName(reader, index, true);
         Class* cls = assembly.LookupClass(lib, nameSpace, name);
-        rv = lib.AllocateType(cls);
+        rv = new Type(cls);
         rv->PointerLevel(pointerLevel);
         return rv;
     }
@@ -323,7 +332,7 @@ Type* SignatureGenerator::TypeFromTypeRef(PELib& lib, AssemblyDef& assembly, PER
         {
             cls = lib.LookupClass(reader, "$$unknown", 0, 0, 0, 0, 0, nameSpace, name);
         }
-        rv = lib.AllocateType(cls);
+        rv = new Type(cls);
         rv->PointerLevel(pointerLevel);
         return rv;
     }
@@ -407,7 +416,7 @@ Type* SignatureGenerator::BasicType(PELib& lib, int typeIndex, int pointerLevel)
             printf("Unknown type %x\n", typeIndex);
             break;
     }
-    return lib.AllocateType(type, pointerLevel);
+    return new Type(type, pointerLevel);
 }
 void SignatureGenerator::TypeFromMethod(PELib& lib, AssemblyDef& assembly, PEReader& reader, MethodSignature* method, Byte* data,
                                         size_t& start, size_t& len)
@@ -432,7 +441,7 @@ void SignatureGenerator::TypeFromMethod(PELib& lib, AssemblyDef& assembly, PERea
         {
             // ignoring custom mods and constraints, for now
             Type* type = GetType(lib, assembly, reader, data, start, len);
-            Param* param = lib.AllocateParam("", type);
+            Param* param = new Param("", type);
             method->AddParam(param);
             if (!type)
                 break;
@@ -545,9 +554,9 @@ Type* SignatureGenerator::GetType(PELib& lib, AssemblyDef& assembly, PEReader& r
         break;
         case ELEMENT_TYPE_FNPTR:
             start++, len--;
-            sig = lib.AllocateMethodSignature("$$unknown", MethodSignature::Managed, nullptr);
+            sig = new MethodSignature("$$unknown", MethodSignature::Managed, nullptr);
             TypeFromMethod(lib, assembly, reader, sig, data, start, len);
-            rv = lib.AllocateType(sig);
+            rv = new Type(sig);
             rv->PointerLevel(pointerLevel);
             break;
         default:

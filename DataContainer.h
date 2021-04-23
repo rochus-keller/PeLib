@@ -5,6 +5,8 @@
 #include <PeLib/Qualifiers.h>
 #include <deque>
 #include <map>
+#include <list>
+#include <vector>
 
 namespace DotNetPELib
 {
@@ -19,7 +21,7 @@ namespace DotNetPELib
     // which means it acts as the 'unnamed' namespace.
     // when this class is overridden as something other than a namespace,
     // it cannot contain namespaces
-    class DataContainer : public DestructorBase
+    class DataContainer : public Resource
     {
     public:
         ///** all classes have to extend from SOMETHING...
@@ -80,7 +82,8 @@ namespace DotNetPELib
         ///* find a sub-container
         DataContainer *FindContainer(const std::string& name, std::deque<Type*>* generics = nullptr);
         ///** Find a sub- container
-        DataContainer *FindContainer(std::vector<std::string>& split, size_t &n, std::deque<Type*>* generics = nullptr, bool method = false);
+        DataContainer *FindContainer(std::vector<std::string>& split, size_t &n,
+                                     std::deque<Type*>* generics = nullptr, bool method = false);
         const std::list<Field *>&Fields() const { return fields_; }
         const std::list<CodeContainer *>&Methods() const { return methods_; }
         ///** Traverse the declaration tree

@@ -25,6 +25,13 @@
 #include "DataContainer.h"
 #include "Callback.h"
 #include "PEFile.h"
+#include "Field.h"
+#include "Namespace.h"
+#include "Class.h"
+#include "AssemblyDef.h"
+#include "PELibError.h"
+#include "Enum.h"
+#include "Method.h"
 #include <typeinfo>
 namespace DotNetPELib
 {

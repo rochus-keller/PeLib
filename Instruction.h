@@ -3,17 +3,17 @@
 
 #include <PeLib/Resource.h>
 #include <map>
+#include <list>
 
 namespace DotNetPELib
 {
     class Operand;
     class PELib;
     class Type;
-    class Allocator;
     typedef unsigned char Byte; /* 1 byte */
 
     /* a CIL instruction */
-    class Instruction : public DestructorBase
+    class Instruction : public Resource
     {
     public:
 
@@ -61,7 +61,7 @@ namespace DotNetPELib
         };
         enum iseh { seh_try, seh_catch, seh_finally, seh_fault, seh_filter, seh_filter_handler };
 
-        Instruction(iop Op, Operand *Operand);
+        Instruction(iop Op, Operand *Operand = 0);
         // for now only do comments and labels and branches...
         Instruction(iop Op, const std::string& Text) : op_(Op), text_(Text), switches_(nullptr), live_(false), sehType_(seh_try), sehBegin_(false), sehCatchType_(nullptr), offset_(0) { }
 
@@ -85,7 +85,7 @@ namespace DotNetPELib
         ///** Get the set of case labels
         std::list<std::string> * GetSwitches() { return switches_; }
         ///** an 'empty' operand
-        void NullOperand(Allocator &allocator);
+        void NullOperand();
         ///** Get the operand (CIL instructions have either zero or 1 operands)
         Operand *GetOperand() const { return operand_; }
         void SetOperand(Operand *operand) { operand_ = operand; }

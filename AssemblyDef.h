@@ -17,14 +17,7 @@ namespace DotNetPELib
     class AssemblyDef : public DataContainer
     {
     public:
-        AssemblyDef(const std::string& Name, bool External, Byte * KeyToken = nullptr) : DataContainer(Name, 0), external_(External),
-            major_(0), minor_(0), build_(0), revision_(0), loaded_(false)
-        {
-            if (KeyToken)
-                memcpy(publicKeyToken_, KeyToken, 8);
-            else
-                memset(publicKeyToken_, 0, 8);
-        }
+        AssemblyDef(const std::string& Name, bool External, Byte * KeyToken = nullptr);
         void SetVersion(int major, int minor, int build, int revision)
         {
             major_ = major;

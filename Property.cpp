@@ -23,6 +23,14 @@
  */
 
 #include "Property.h"
+#include "Method.h"
+#include "DataContainer.h"
+#include "MethodSignature.h"
+#include "Value.h"
+#include "Type.h"
+#include "Instruction.h"
+#include "Operand.h"
+#include "PELibError.h"
 #include "PEFile.h"
 #include <typeinfo>
 #include <sstream>
@@ -71,8 +79,8 @@ void Property::CreateFunctions(PELib& peLib, std::vector<Type*>& indices, bool h
         }
     if (!getter_)
     {
-        prototype = peLib.AllocateMethodSignature(getter_name, MethodSignature::Managed, parent_);
-        getter_ = peLib.AllocateMethod(prototype, Qualifiers::Public | (instance_ ? Qualifiers::Instance : Qualifiers::Static));
+        prototype = new MethodSignature(getter_name, MethodSignature::Managed, parent_);
+        getter_ = new Method(prototype, Qualifiers::Public | (instance_ ? Qualifiers::Instance : Qualifiers::Static));
     }
     if (hasSetter)
     {
@@ -89,8 +97,8 @@ void Property::CreateFunctions(PELib& peLib, std::vector<Type*>& indices, bool h
             }
         if (!setter_)
         {
-            prototype = peLib.AllocateMethodSignature(setter_name, MethodSignature::Managed, parent_);
-            setter_ = peLib.AllocateMethod(prototype, Qualifiers::Public | (instance_ ? Qualifiers::Instance : Qualifiers::Static));
+            prototype = new MethodSignature(setter_name, MethodSignature::Managed, parent_);
+            setter_ = new Method(prototype, Qualifiers::Public | (instance_ ? Qualifiers::Instance : Qualifiers::Static));
         }
     }
     if (!found)
@@ -102,15 +110,15 @@ void Property::CreateFunctions(PELib& peLib, std::vector<Type*>& indices, bool h
             stream << "P" << counter++;
             char cbuf[256];
             stream.getline(cbuf, sizeof(cbuf));
-            getter_->Signature()->AddParam(peLib.AllocateParam(cbuf, i));
+            getter_->Signature()->AddParam(new Param(cbuf, i));
             if (setter_)
-                setter_->Signature()->AddParam(peLib.AllocateParam(cbuf, i));
+                setter_->Signature()->AddParam(new Param(cbuf, i));
         }
         getter_->Signature()->ReturnType(type_);
         if (setter_)
         {
-            setter_->Signature()->AddParam(peLib.AllocateParam("Value", type_));
-            setter_->Signature()->ReturnType(peLib.AllocateType(Type::Void, 0));
+            setter_->Signature()->AddParam(new Param("Value", type_));
+            setter_->Signature()->ReturnType(new Type(Type::Void, 0));
         }
     }
 }
@@ -119,7 +127,7 @@ void Property::CallGet(PELib& peLib, CodeContainer* code)
     if (getter_)
     {
         code->AddInstruction(
-            peLib.AllocateInstruction(Instruction::i_call, peLib.AllocateOperand(peLib.AllocateMethodName(getter_->Signature()))));
+            new Instruction(Instruction::i_call, new Operand(new MethodName(getter_->Signature()))));
     }
 }
 void Property::CallSet(PELib& peLib, CodeContainer* code)
@@ -127,7 +135,7 @@ void Property::CallSet(PELib& peLib, CodeContainer* code)
     if (setter_)
     {
         code->AddInstruction(
-            peLib.AllocateInstruction(Instruction::i_call, peLib.AllocateOperand(peLib.AllocateMethodName(setter_->Signature()))));
+            new Instruction(Instruction::i_call, new Operand(new MethodName(setter_->Signature()))));
     }
 }
 bool Property::ILSrcDump(PELib& peLib) const
@@ -177,7 +185,7 @@ Property* Property::ObjIn(PELib& peLib)
     ch = peLib.ObjChar();
     if (ch != ',')
         peLib.ObjError(oe_syntax);
-    Property* rv = peLib.AllocateProperty();
+    Property* rv = new Property();
     Type* type = Type::ObjIn(peLib);
     if (peLib.ObjBegin() != 'm')
         peLib.ObjError(oe_syntax);

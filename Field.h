@@ -11,7 +11,7 @@ namespace DotNetPELib
     typedef long long longlong;
 
     ///** a field, could be either static or non-static
-    class Field : public DestructorBase
+    class Field : public Resource
     {
     public:
         ///** Size for enumerated values

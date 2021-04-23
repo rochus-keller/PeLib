@@ -2,6 +2,7 @@
 #define DotNetPELib_VALUE
 
 #include <PeLib/Resource.h>
+#include <string>
 
 namespace DotNetPELib
 {
@@ -13,7 +14,7 @@ namespace DotNetPELib
 
     ///** a value, typically to be used as an operand
     // various other classes derive from this to make specific types of operand values
-    class Value : public DestructorBase
+    class Value : public Resource
     {
     public:
         Value(const std::string& Name, Type *tp) : name_(Name), type_(tp) { }

@@ -24,6 +24,7 @@
 
 #include "CustomAttributeContainer.h"
 #include "PEFile.h"
+#include "AssemblyDef.h"
 
 namespace DotNetPELib
 {

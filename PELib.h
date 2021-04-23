@@ -25,24 +25,11 @@
 #ifndef DOTNETPELIB_H
 #define DOTNETPELIB_H
 
-#include <PeLib/PELibError.h>
-#include <PeLib/CodeContainer.h>
-#include <PeLib/DataContainer.h>
-#include <PeLib/CustomAttributeContainer.h>
-#include <PeLib/AssemblyDef.h>
-#include <PeLib/Namespace.h>
-#include <PeLib/Property.h>
-#include <PeLib/Class.h>
-#include <PeLib/Method.h>
-#include <PeLib/Field.h>
-#include <PeLib/Enum.h>
-#include <PeLib/Operand.h>
-#include <PeLib/Instruction.h>
-#include <PeLib/Value.h>
-#include <PeLib/MethodSignature.h>
-#include <PeLib/Type.h>
-#include <PeLib/Allocator.h>
 #include <memory>
+#include <vector>
+#include <deque>
+#include <map>
+#include <list>
 
 // reference changelog.txt to see what the changes are
 //
@@ -117,11 +104,23 @@ namespace DotNetPELib
     // definitions for some common types
     typedef long long longlong;
     typedef unsigned char Byte; /* 1 byte */
+    class PEWriter;
+    class AssemblyDef;
+    class Class;
+    class MethodSignature;
+    class Method;
+    class Type;
+    class Callback;
+    class PEReader;
+    class Param;
+    class DataContainer;
+    class CodeContainer;
+    class Namespace;
 
 
     ///** this is the main class to instantiate
     // the constructor creates a working assembly, you put all your code and data into that
-    class PELib : public Allocator
+    class PELib
     {
     public:
         enum eFindType {
@@ -146,6 +145,7 @@ namespace DotNetPELib
         enum OutputMode { ilasm, peexe, pedll, object };
         ///** Constructor, creates a working assembly
         PELib(const std::string& AssemblyName, int CoreFlags);
+        ~PELib();
         ///** Get the working assembly
         // This is the one with your code and data, that gets written to the output
         AssemblyDef *WorkingAssembly() const { return assemblyRefs_.front(); }
@@ -170,7 +170,7 @@ namespace DotNetPELib
                            size_t keyIndex, const std::string& nameSpace, const std::string& name);
         ///** Pinvoke references are always added to this object
         void AddPInvokeReference(MethodSignature *methodsig, const std::string& dllname, bool iscdecl);
-        void AddPInvokeWithVarargs(MethodSignature *methodsig) { pInvokeReferences_.insert(std::pair<std::string, MethodSignature *>(methodsig->Name(), methodsig)); }
+        void AddPInvokeWithVarargs(MethodSignature *methodsig);
         void RemovePInvokeReference(const std::string& name) {
             pInvokeSignatures_.erase(name);
         }
@@ -224,6 +224,8 @@ namespace DotNetPELib
         void SetCodeContainer(CodeContainer *container) { codeContainer_ = container; }
         CodeContainer *GetCodeContainer() const { return codeContainer_; }
         Class* FindOrCreateGeneric(std::string name, std::deque<Type*>& generics);
+
+        Byte* AllocateBytes(size_t sz);
     protected:
         void SplitPath(std::vector<std::string> & split, std::string path);
         bool ILSrcDumpHeader();
@@ -246,6 +248,7 @@ namespace DotNetPELib
         int objInputSize_;
         int objInputPos_;
         int objInputCache_;
+        std::deque<Byte*> allocatedBytes_;
     };
 
 } // namespace

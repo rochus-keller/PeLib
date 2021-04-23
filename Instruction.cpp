@@ -23,7 +23,13 @@
  */
 
 #include "Instruction.h"
-#include "DotNetPELib.h" // TODO
+#include "Operand.h"
+#include "MethodSignature.h"
+#include "Value.h"
+#include "Type.h"
+#include "PELibError.h"
+#include "PELib.h" // TODO
+#include <iostream>
 #include <float.h>
 namespace DotNetPELib
 {
@@ -268,7 +274,7 @@ Instruction::Instruction(iop Op, Operand* Oper) : op_(Op), switches_(nullptr), l
     switches_ = new std::list<std::string>();
     operand_ = Oper;
 }
-void Instruction::NullOperand(Allocator& allocator) { operand_ = allocator.AllocateOperand(); }
+void Instruction::NullOperand() { operand_ = new Operand(); }
 
 std::string Instruction::Label() const
 {
@@ -484,23 +490,23 @@ Instruction* Instruction::ObjIn(PELib& peLib)
                 {
                     sehCatchType = nullptr;
                 }
-                rv = peLib.AllocateInstruction((Instruction::iseh)sehType, sehBegin, sehCatchType);
+                rv = new Instruction((Instruction::iseh)sehType, sehBegin, sehCatchType);
                 break;
             case i_label:
             {
                 std::string lbl = peLib.UnformatName();
-                rv = peLib.AllocateInstruction(op, peLib.AllocateOperand(lbl));
+                rv = new Instruction(op, new Operand(lbl));
             }
             break;
             case i_comment:
             {
                 std::string text = peLib.UnformatName();
-                rv = peLib.AllocateInstruction(op, text);
+                rv = new Instruction(op, text);
             }
             break;
             case i_switch:
             {
-                rv = peLib.AllocateInstruction(op);
+                rv = new Instruction(op);
                 int n = peLib.ObjInt();
                 for (int i = 0; i < n; i++)
                 {
@@ -515,14 +521,14 @@ Instruction* Instruction::ObjIn(PELib& peLib)
             default:
             {
                 Operand* operand = Operand::ObjIn(peLib);
-                rv = peLib.AllocateInstruction(op, operand);
+                rv = new Instruction(op, operand);
             }
             break;
         }
     }
     else
     {
-        rv = peLib.AllocateInstruction(op);
+        rv = new Instruction(op);
         if (ch == '$')
         {
             ch = peLib.ObjChar();

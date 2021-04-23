@@ -1,10 +1,11 @@
 #ifndef DOTNETPELIB_RESOURCE_H
 #define DOTNETPELIB_RESOURCE_H
 
-#include <QSet>
+#include <set>
 
 namespace DotNetPELib
 {
+#if 0
     class RefCounted
     {
     public:
@@ -73,20 +74,17 @@ namespace DotNetPELib
     private:
         T* d_obj;
     };
+#endif
 
-    // TEMP TODO
-
-    ///** Destructor base.
-    // Used to support cleaning up objects when the allocator is used to create
-    // them.  Every object that can be allocated eventualy inherits
-    // this virtual destructor, so that the allocator can destruct them again later.
-    class DestructorBase
+    class Resource
     {
     public:
-        DestructorBase() { }
-        DestructorBase(const DestructorBase &) { }
-        DestructorBase& operator=(const DestructorBase &) { return *this; }
-        virtual ~DestructorBase() { }
+        Resource() { s_all.insert(this); }
+    protected:
+        virtual ~Resource();
+    private:
+        friend class PELib;
+        static std::set<Resource*> s_all; // TODO replace with RefCounted
     };
 }
 

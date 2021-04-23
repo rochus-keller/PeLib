@@ -2,6 +2,8 @@
 #define DotNetPELib_PROPERTY
 
 #include <PeLib/Resource.h>
+#include <string>
+#include <vector>
 
 namespace DotNetPELib
 {
@@ -16,7 +18,7 @@ namespace DotNetPELib
     /* a property, note we are only supporting classic properties here, not any
      * extensions that are allowed in the image file format
      */
-    class Property : public DestructorBase
+    class Property : public Resource
     {
     public:
         enum {

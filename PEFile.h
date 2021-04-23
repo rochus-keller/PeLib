@@ -25,6 +25,9 @@
 #include <vector>
 #include <string>
 #include <set>
+#include <iostream>
+#include <PeLib/CodeContainer.h>
+#include <string.h> // TODO
 #include "RSAEncoder.h"
 #include "sha1.h"
 // this is an internal header used to define the various aspects of a PE file
@@ -57,6 +60,7 @@ namespace DotNetPELib {
     class Field;
     class Type;
     class PELib;
+    class Property;
 
     class PEMethod;
     class AssemblyRefTableEntry;

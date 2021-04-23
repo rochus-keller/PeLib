@@ -25,6 +25,12 @@
 #include "Class.h"
 #include "Callback.h"
 #include "PEFile.h"
+#include "Property.h"
+#include "Type.h"
+#include "PELibError.h"
+#include "Field.h"
+#include "MethodSignature.h"
+#include "Method.h"
 #include <typeinfo>
 #include <climits>
 #include <sstream>
@@ -285,7 +291,7 @@ Class* Class::ObjIn(PELib& peLib, bool definition)
             peLib.ObjError(oe_noclass);
         if (!temp)
         {
-            rv = c = peLib.AllocateClass(name, flags, pack, size);
+            rv = c = new Class(name, flags, pack, size);
         }
         else
         {
@@ -363,7 +369,7 @@ void Class::Load(PELib& lib, AssemblyDef& assembly, PEReader& reader, size_t cls
         {
             reader.ReadFromString(buf, sizeof(buf), entry->nameIndex_.index_);
             Field* field =
-                lib.AllocateField((char*)buf, nullptr, (entry->flags_ & FieldTableEntry::Static) ? Qualifiers::Static : 0);
+                new Field((char*)buf, nullptr, (entry->flags_ & FieldTableEntry::Static) ? Qualifiers::Static : 0);
             Add(field);
             SignatureGenerator::TypeFromFieldRef(lib, assembly, reader, field, entry->signatureIndex_.index_);
             if (entry->flags_ & FieldTableEntry::HasDefault)
@@ -395,11 +401,11 @@ void Class::Load(PELib& lib, AssemblyDef& assembly, PEReader& reader, size_t cls
         if ((entry->flags_ & MethodDefTableEntry::MemberAccessMask) == MethodDefTableEntry::Public)
         {
             reader.ReadFromString(buf, sizeof(buf), entry->nameIndex_.index_);
-            MethodSignature* sig = lib.AllocateMethodSignature((char*)buf, MethodSignature::Managed, this);
+            MethodSignature* sig = new MethodSignature((char*)buf, MethodSignature::Managed, this);
             SignatureGenerator::TypeFromMethodRef(lib, assembly, reader, sig, entry->signatureIndex_.index_);
             if (entry->flags_ & MethodDefTableEntry::Virtual)
                entry->flags_ |= Qualifiers::Virtual;       
-            Method* method = lib.AllocateMethod(sig, entry->flags_, false);
+            Method* method = new Method(sig, entry->flags_, false);
             Add(method);
             sigs.push_back(sig);
             methods.push_back(method);
@@ -448,7 +454,7 @@ void Class::Load(PELib& lib, AssemblyDef& assembly, PEReader& reader, size_t cls
             }
             for (int j = propIndex; j < end; j++)
             {
-                Property* prop = lib.AllocateProperty();
+                Property* prop = new Property();
                 prop->SetContainer(this, false);
                 properties_.push_back(prop);
                 prop->Load(lib, assembly, reader, j, startMethod, startSemantics, endSemantics, methods);

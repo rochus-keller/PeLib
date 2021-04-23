@@ -24,6 +24,10 @@
 
 #include "AssemblyDef.h"
 #include "PEFile.h"
+#include "Namespace.h"
+#include "Class.h"
+#include "Enum.h"
+#include "PELibError.h"
 #include "sha1.h"
 #include <climits>
 namespace DotNetPELib
@@ -107,7 +111,7 @@ Namespace* AssemblyDef::InsertNameSpaces(PELib& lib, std::map<std::string, Names
         }
         if (!rv)
         {
-            nameSpaces[name] = lib.AllocateNamespace(end);
+            nameSpaces[name] = new Namespace(end);
             if (parent)
                 parent->Add(nameSpaces[name]);
         }
@@ -151,7 +155,7 @@ Namespace* AssemblyDef::InsertNameSpaces(PELib& lib, Namespace* nameSpace, std::
     }
     if (!rv)
     {
-        rv = lib.AllocateNamespace(name);
+        rv = new Namespace(name);
         if (nameSpace)
         {
             nameSpace->Add(rv);
@@ -188,7 +192,7 @@ Class* AssemblyDef::InsertClasses(PELib& lib, Namespace* nameSpace, Class* cls, 
     }
     if (!rv)
     {
-        rv = lib.AllocateClass(name, 0, -1, -1);
+        rv = new Class(name, 0, -1, -1);
         if (cls)
             cls->Add(rv);
         else
@@ -274,7 +278,7 @@ AssemblyDef* AssemblyDef::ObjIn(PELib& peLib, bool definition)
             a = peLib.FindAssembly(name);
             if (!a)
             {
-                a = peLib.AllocateAssemblyDef(name, true);
+                a = new AssemblyDef(name, true);
             }
         }
         ((DataContainer*)a)->ObjIn(peLib);
@@ -287,6 +291,15 @@ AssemblyDef* AssemblyDef::ObjIn(PELib& peLib, bool definition)
         peLib.ObjError(oe_syntax);
     return a;
 }
+AssemblyDef::AssemblyDef(const std::string& Name, bool External, Byte* KeyToken): DataContainer(Name, 0), external_(External),
+    major_(0), minor_(0), build_(0), revision_(0), loaded_(false)
+{
+    if (KeyToken)
+        memcpy(publicKeyToken_, KeyToken, 8);
+    else
+        memset(publicKeyToken_, 0, 8);
+}
+
 void AssemblyDef::Load(PELib& lib, PEReader& reader)
 {
     customAttributes_.Load(lib, *this, reader);
@@ -384,16 +397,16 @@ void AssemblyDef::Load(PELib& lib, PEReader& reader)
                     {
                         // Assumes namespace system, which is probably safe since we contexted to
                         // mscorlib.dll
-                        cls = lib.AllocateEnum((char*)buf, flags, Field::i32);
+                        cls = new Enum((char*)buf, flags, Field::i32);
                     }
                     else if (entry->extends_.tag_ == TypeDefOrRef::TypeRef && n < refClasses.size() &&
                              refClasses[n] == "System.Enum")
                     {
-                        cls = lib.AllocateEnum((char*)buf, flags, Field::i32);
+                        cls = new Enum((char*)buf, flags, Field::i32);
                     }
                     else
                     {
-                        cls = lib.AllocateClass((char*)buf, flags, -1, -1);
+                        cls = new Class((char*)buf, flags, -1, -1);
                     }
                 }
                 classes.push_back(cls);

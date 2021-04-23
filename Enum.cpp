@@ -24,12 +24,15 @@
 
 #include "Enum.h"
 #include "PEFile.h"
+#include "Type.h"
+#include "PELibError.h"
+
 namespace DotNetPELib
 {
-Field* Enum::AddValue(Allocator& allocator, const std::string& Name, longlong Value)
+Field* Enum::AddValue(const std::string& Name, longlong Value)
 {
-    Type* type = allocator.AllocateType(this);
-    Field* field = allocator.AllocateField(Name, type, Qualifiers(Qualifiers::EnumField));
+    Type* type = new Type(this);
+    Field* field = new Field(Name, type, Qualifiers(Qualifiers::EnumField));
     field->AddEnumValue(Value, size);
     Add(field);
     return field;
@@ -79,7 +82,7 @@ Enum* Enum::ObjIn(PELib& peLib, bool definition)
         if (temp && typeid(*temp) != typeid(Enum))
             peLib.ObjError(oe_noenum);
         if (!temp)
-            rv = e = peLib.AllocateEnum(name, flags, size);
+            rv = e = new Enum(name, flags, size);
         else
             e = static_cast<Enum*>(temp);
         ((DataContainer*)e)->ObjIn(peLib);

@@ -4,6 +4,8 @@
 #include <PeLib/Resource.h>
 #include <PeLib/Qualifiers.h>
 #include <map>
+#include <vector>
+#include <list>
 
 namespace DotNetPELib
 {
@@ -14,7 +16,7 @@ namespace DotNetPELib
     ///** base class that contains instructions/ labels
     // will be further overridden later to make a 'method'
     // definition
-    class CodeContainer : public DestructorBase
+    class CodeContainer : public Resource
     {
     public:
         CodeContainer(Qualifiers Flags) :flags_(Flags), hasSEH_(false), parent_(nullptr) { }

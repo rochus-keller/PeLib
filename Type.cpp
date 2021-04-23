@@ -24,6 +24,11 @@
 
 #include "Type.h"
 #include "PEFile.h"
+#include "DataContainer.h"
+#include "Class.h"
+#include "MethodSignature.h"
+#include "Enum.h"
+#include "PELibError.h"
 #include <stdio.h>
 namespace DotNetPELib
 {
@@ -216,16 +221,16 @@ Type* Type::ObjIn(PELib& peLib)
             {
                 peLib.ObjError(oe_syntax);
             }
-            rv = peLib.AllocateType(typeref);
+            rv = new Type(typeref);
         }
         else if (tp == method)
         {
             MethodSignature* methodRef = MethodSignature::ObjIn(peLib, nullptr);
-            rv = peLib.AllocateType(methodRef);
+            rv = new Type(methodRef);
         }
         else
         {
-            rv = peLib.AllocateType(tp, 0);
+            rv = new Type(tp, 0);
         }
         if (showType)
             rv->ShowType();
@@ -306,7 +311,7 @@ void BoxedType::ObjOut(PELib& peLib, int pass) const { peLib.Out() << std::endl 
 BoxedType* BoxedType::ObjIn(PELib& peLib)
 {
     Type::BasicType type = (Type::BasicType)peLib.ObjInt();
-    return peLib.AllocateBoxedType(type);
+    return new BoxedType(type);
 }
 size_t BoxedType::Render(PELib& peLib, Byte* result)
 {

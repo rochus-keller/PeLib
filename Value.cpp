@@ -24,6 +24,12 @@
 
 #include "Value.h"
 #include "PEFile.h"
+#include "Type.h"
+#include "PELibError.h"
+#include "Instruction.h"
+#include "Field.h"
+#include "DataContainer.h"
+#include "MethodSignature.h"
 namespace DotNetPELib
 {
 bool Value::ILSrcDump(PELib& peLib) const
@@ -42,7 +48,7 @@ Value* Value::ObjIn(PELib& peLib, bool definition)
         {
             peLib.ObjBack();
             Type* type = Type::ObjIn(peLib);
-            Value* rv = peLib.AllocateValue("", type);
+            Value* rv = new Value("", type);
             return rv;
         }
         case 'l':
@@ -93,7 +99,7 @@ Local* Local::ObjIn(PELib& peLib, bool definition)
     {
         peLib.ObjError(oe_syntax);
     }
-    Local* rv = peLib.AllocateLocal(name, tp);
+    Local* rv = new Local(name, tp);
     rv->Index(index);
     return rv;
 }
@@ -139,7 +145,7 @@ Param* Param::ObjIn(PELib& peLib, bool definition)
     {
         peLib.ObjError(oe_syntax);
     }
-    Param* rv = peLib.AllocateParam(name, tp);
+    Param* rv = new Param(name, tp);
     rv->Index(index);
     return rv;
 }
@@ -176,7 +182,7 @@ void FieldName::ObjOut(PELib& peLib, int pass) const { field_->ObjOut(peLib, -1)
 FieldName* FieldName::ObjIn(PELib& peLib, bool definition)
 {
     Field* fld = Field::ObjIn(peLib, false);
-    FieldName* rv = peLib.AllocateFieldName(fld);
+    FieldName* rv = new FieldName(fld);
     return rv;
 }
 size_t FieldName::Render(PELib& peLib, int opcode, int operandType, Byte* result)
@@ -202,7 +208,7 @@ void MethodName::ObjOut(PELib& peLib, int pass) const { signature_->ObjOut(peLib
 MethodName* MethodName::ObjIn(PELib& peLib, bool defintion)
 {
     MethodSignature* sig = MethodSignature::ObjIn(peLib, nullptr, false);
-    MethodName* rv = peLib.AllocateMethodName(sig);
+    MethodName* rv = new MethodName(sig);
     return rv;
 }
 size_t MethodName::Render(PELib& peLib, int opcode, int operandType, Byte* result)

@@ -22,7 +22,8 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "Namespace.h"
+#include "PELibError.h"
 #include "PEFile.h"
 namespace DotNetPELib
 {
@@ -50,7 +51,7 @@ Namespace* Namespace::ObjIn(PELib& peLib, bool definition)
     if (temp && typeid(*temp) != typeid(Namespace))
         peLib.ObjError(oe_nonamespace);
     if (!temp)
-        rv = temp = peLib.AllocateNamespace(name);
+        rv = temp = new Namespace(name);
     ((DataContainer*)temp)->ObjIn(peLib);
     if (peLib.ObjEnd() != 'n')
         peLib.ObjError(oe_syntax);

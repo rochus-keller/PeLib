@@ -24,6 +24,9 @@
 
 #include "Field.h"
 #include "PEFile.h"
+#include "DataContainer.h"
+#include "Type.h"
+#include "PELibError.h"
 #include <iomanip>
 namespace DotNetPELib
 {
@@ -193,7 +196,7 @@ Field* Field::ObjIn(PELib& peLib, bool definition)
             }
         }
         if (!f)
-            rv = f = peLib.AllocateField(name, type, flags);
+            rv = f = new Field(name, type, flags);
         else if (!f->FieldType()->Matches(type))
             peLib.ObjError(oe_typemismatch);
         if (rv)

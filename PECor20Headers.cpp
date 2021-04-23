@@ -22,7 +22,7 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "PELib.h"
 #include "PEFile.h"
 #include "MZHeader.h"
 #include "PEHeader.h"

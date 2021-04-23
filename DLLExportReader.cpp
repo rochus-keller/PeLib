@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "DLLExportReader.h"
-#include "DotNetPELib.h"
+#include "PELib.h"
 #include "PEHeader.h"
 #include "MZHeader.h"
 

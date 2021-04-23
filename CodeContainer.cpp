@@ -24,6 +24,12 @@
 
 #include "CodeContainer.h"
 #include "PEFile.h"
+#include "DataContainer.h"
+#include "Instruction.h"
+#include "PELibError.h"
+#include "Type.h"
+#include "Operand.h"
+#include "Value.h"
 #include <typeinfo>
 namespace DotNetPELib
 {
@@ -262,7 +268,7 @@ void CodeContainer::OptimizeLDC(PELib& peLib)
                     }
                     if (done)
                     {
-                        instruction->NullOperand(peLib);
+                        instruction->NullOperand();
                     }
                 }
                 break;
@@ -295,7 +301,7 @@ void CodeContainer::OptimizeLDLOC(PELib& peLib)
                                 static Instruction::iop ldlocs[] = {Instruction::i_ldloc_0, Instruction::i_ldloc_1,
                                                                     Instruction::i_ldloc_2, Instruction::i_ldloc_3};
                                 instruction->OpCode(ldlocs[index]);
-                                instruction->NullOperand(peLib);
+                                instruction->NullOperand();
                             }
                             else if (index < 128 && index >= -128)
                                 instruction->OpCode(Instruction::i_ldloc_s);
@@ -310,7 +316,7 @@ void CodeContainer::OptimizeLDLOC(PELib& peLib)
                                 static Instruction::iop stlocs[] = {Instruction::i_stloc_0, Instruction::i_stloc_1,
                                                                     Instruction::i_stloc_2, Instruction::i_stloc_3};
                                 instruction->OpCode(stlocs[index]);
-                                instruction->NullOperand(peLib);
+                                instruction->NullOperand();
                             }
                             else if (index < 128 && index >= -128)
                                 instruction->OpCode(Instruction::i_stloc_s);
@@ -347,7 +353,7 @@ void CodeContainer::OptimizeLDARG(PELib& peLib)
                                 static Instruction::iop ldargs[] = {Instruction::i_ldarg_0, Instruction::i_ldarg_1,
                                                                     Instruction::i_ldarg_2, Instruction::i_ldarg_3};
                                 instruction->OpCode(ldargs[index]);
-                                instruction->NullOperand(peLib);
+                                instruction->NullOperand();
                             }
                             else {
                                 if (index < 128 && index >= -128)
@@ -356,7 +362,7 @@ void CodeContainer::OptimizeLDARG(PELib& peLib)
                                 }
                                 if (instruction->GetOperand()->OperandType() == Operand::t_value && instruction->GetOperand()->GetValue()->GetType() && instruction->GetOperand()->GetValue()->GetType()->GetBasicType() == Type::mvar)
                                 {
-                                    instruction->SetOperand(peLib.AllocateOperand(index, Operand::i32));
+                                    instruction->SetOperand(new Operand(index, Operand::i32));
                                 }
                             }
                             break;
@@ -367,7 +373,7 @@ void CodeContainer::OptimizeLDARG(PELib& peLib)
                             }
                             if (instruction->GetOperand()->OperandType() == Operand::t_value && instruction->GetOperand()->GetValue()->GetType() && instruction->GetOperand()->GetValue()->GetType()->GetBasicType() == Type::mvar)
                             {
-                                instruction->SetOperand(peLib.AllocateOperand(index, Operand::i32));
+                                instruction->SetOperand(new Operand(index, Operand::i32));
                             }
                             break;
                         case Instruction::i_starg:
@@ -377,7 +383,7 @@ void CodeContainer::OptimizeLDARG(PELib& peLib)
                             }
                             if (instruction->GetOperand()->OperandType() == Operand::t_value && instruction->GetOperand()->GetValue()->GetType() && instruction->GetOperand()->GetValue()->GetType()->GetBasicType() == Type::mvar)
                             {
-                                instruction->SetOperand(peLib.AllocateOperand(index, Operand::i32));
+                                instruction->SetOperand(new Operand(index, Operand::i32));
                             }
                             break;
                     }

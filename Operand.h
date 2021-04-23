@@ -2,6 +2,7 @@
 #define DotNetPELib_OPERAND
 
 #include <PeLib/Resource.h>
+#include <string>
 
 namespace DotNetPELib
 {
@@ -14,7 +15,7 @@ namespace DotNetPELib
     // this can contain a number, a string, or a reference to value
     // a value can be a field, methodsignature, local, or param reference
     //
-    class Operand : public DestructorBase
+    class Operand : public Resource
     {
     public:
         enum OpSize { any, i8, u8, i16, u16, i32, u32, i64, u64, inative, r4, r8 };

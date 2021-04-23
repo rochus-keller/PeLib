@@ -2,6 +2,7 @@
 #define DotNetPELib_TYPE
 
 #include <PeLib/Resource.h>
+#include <stdlib.h>
 
 namespace DotNetPELib
 {
@@ -11,7 +12,7 @@ namespace DotNetPELib
     typedef unsigned char Byte; /* 1 byte */
 
     ///** the type of a field or value
-    class Type : public DestructorBase
+    class Type : public Resource
     {
     public:
         enum BasicType {

@@ -22,15 +22,29 @@
  *
  */
 
-#include "DotNetPELib.h"
+#include "PELib.h"
 #include "Callback.h"
 #include "PEFile.h"
 #include "DLLExportReader.h"
+#include "AssemblyDef.h"
+#include "Method.h"
+#include "MethodSignature.h"
+#include "Value.h"
+#include "Type.h"
+#include "Namespace.h"
+#include "Class.h"
+#include "Enum.h"
+#include "Field.h"
+#include "Property.h"
+#include "PELibError.h"
+#include <cassert>
 
 #define OBJECT_FILE_VERSION "100"
 
 namespace DotNetPELib
 {
+
+static PELib* s_this = 0;
 
 extern std::string DIR_SEP;
 PELib::PELib(const std::string& AssemblyName, int CoreFlags) :
@@ -44,14 +58,30 @@ PELib::PELib(const std::string& AssemblyName, int CoreFlags) :
     objInputPos_(0),
     objInputCache_(0)
 {
+    if( s_this != 0 )
+        throw PELibError(PELibError::AlreadyRunning);
+    s_this = this;
     // create the working assembly.   Note that this will ALWAYS be the first
     // assembly in the list
-    AssemblyDef* assemblyRef = AllocateAssemblyDef(AssemblyName, false);
+    AssemblyDef* assemblyRef = new AssemblyDef(AssemblyName, false);
     assemblyRefs_.push_back(assemblyRef);
+}
+
+PELib::~PELib()
+{
+    std::set<Resource*>::const_iterator j;
+    for( j = Resource::s_all.begin(); j != Resource::s_all.end(); ++j )
+        delete *j;
+    assert( Resource::s_all.empty() );
+    std::deque<Byte*>::const_iterator i;
+    for( i = allocatedBytes_.begin(); i != allocatedBytes_.end(); ++i )
+        delete[] *i;
+    allocatedBytes_.clear();
+    s_this = 0;
 }
 AssemblyDef* PELib::EmptyWorkingAssembly(const std::string& AssemblyName)
 {
-    AssemblyDef* assemblyRef = AllocateAssemblyDef(AssemblyName, false);
+    AssemblyDef* assemblyRef = new AssemblyDef(AssemblyName, false);
     assemblyRefs_.pop_front();
     assemblyRefs_.push_front(assemblyRef);
     return assemblyRef;
@@ -84,14 +114,19 @@ bool PELib::DumpOutputFile(const std::string& file, OutputMode mode, bool gui)
 }
 void PELib::AddExternalAssembly(const std::string& assemblyName, Byte* publicKeyToken)
 {
-    AssemblyDef* assemblyRef = AllocateAssemblyDef(assemblyName, true, publicKeyToken);
+    AssemblyDef* assemblyRef = new AssemblyDef(assemblyName, true, publicKeyToken);
     assemblyRefs_.push_back(assemblyRef);
 }
 void PELib::AddPInvokeReference(MethodSignature* methodsig, const std::string& dllname, bool iscdecl)
 {
-    Method* m = AllocateMethod(methodsig, Qualifiers::PInvokeFunc | Qualifiers::Public);
+    Method* m = new Method(methodsig, Qualifiers::PInvokeFunc | Qualifiers::Public);
     m->SetPInvoke(dllname, iscdecl ? Method::Cdecl : Method::Stdcall);
     pInvokeSignatures_[methodsig->Name()] = m;
+}
+
+void PELib::AddPInvokeWithVarargs(MethodSignature* methodsig)
+{
+    pInvokeReferences_.insert(std::pair<std::string, MethodSignature *>(methodsig->Name(), methodsig));
 }
 Method* PELib::FindPInvoke(const std::string& name) const
 {
@@ -313,7 +348,7 @@ Class* PELib::FindOrCreateGeneric(std::string name, std::deque<Type*>& generics)
     }
     if (Find(name, &result) == s_class)
     {
-        Class* rv = AllocateClass(static_cast<Class*>(result));
+        Class* rv = new Class(*static_cast<Class*>(result));
         rv->Generic() = generics;
         rv->GenericParent(static_cast<Class*>(result));
         static_cast<Class *>(result)->Parent()->Add(rv);
@@ -322,14 +357,21 @@ Class* PELib::FindOrCreateGeneric(std::string name, std::deque<Type*>& generics)
         {
             // only doing methods right now...
             Method *old = static_cast<Method*>(m);
-            MethodSignature *m1 = AllocateMethodSignature(old->Signature());
+            MethodSignature *m1 = new MethodSignature(*old->Signature());
             m1->SetContainer(rv);
-            Method* nm = AllocateMethod(m1, old->Flags());
+            Method* nm = new Method(m1, old->Flags());
             rv->Add(nm);
         }
         return rv;
     }
     return nullptr;
+}
+
+Byte*PELib::AllocateBytes(size_t sz)
+{
+    Byte* res = new Byte[sz];
+    allocatedBytes_.push_back(res);
+    return res;
 }
 
 PELib::eFindType PELib::Find(std::string path, Method **result, std::vector<Type *> args, Type* rv, std::deque<Type*>* generics, AssemblyDef *assembly, bool matchArgs)

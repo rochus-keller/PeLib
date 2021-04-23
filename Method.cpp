@@ -24,6 +24,13 @@
 
 #include "Method.h"
 #include "PEFile.h"
+#include "MethodSignature.h"
+#include "Value.h"
+#include "Type.h"
+#include "DataContainer.h"
+#include "PELibError.h"
+#include "Instruction.h"
+#include "Operand.h"
 #include <search.h>
 #include <stdio.h>
 #include <set>
@@ -181,7 +188,7 @@ Method* Method::ObjIn(PELib& peLib, bool definition, Method** rfound)
     MethodSignature* prototype = MethodSignature::ObjIn(peLib, &found, definition);
     if (!found)
     {
-        rv = found = peLib.AllocateMethod(prototype, flags, entryPoint);
+        rv = found = new Method(prototype, flags, entryPoint);
         found->MaxStack(stack);
         if (imode == PInvoke)
         {

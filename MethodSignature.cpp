@@ -24,6 +24,13 @@
 
 #include "MethodSignature.h"
 #include "PEFile.h"
+#include "Type.h"
+#include "Value.h"
+#include "PELibError.h"
+#include "DataContainer.h"
+#include "Class.h"
+#include "Method.h"
+#include "AssemblyDef.h"
 #include <stdio.h>
 #include <sstream>
 
@@ -324,7 +331,7 @@ MethodSignature* MethodSignature::ObjIn(PELib& peLib, Method** found, bool defin
             }
             else
             {
-                rv = peLib.AllocateMethodSignature(name, MethodSignature::Vararg, nullptr);
+                rv = new MethodSignature(name, MethodSignature::Vararg, nullptr);
                 rv->SignatureParent(pinvoke->Signature());  // tie it to the parent pinvoke
                 rv->ReturnType(returnType);
                 for (auto p : args)
@@ -337,7 +344,7 @@ MethodSignature* MethodSignature::ObjIn(PELib& peLib, Method** found, bool defin
     }
     else if (!peLib.GetContainer())  // defining a pinvoke
     {
-        rv = peLib.AllocateMethodSignature(name, flags, nullptr);
+        rv = new MethodSignature(name, flags, nullptr);
         rv->ReturnType(returnType);
         for (auto p : args)
             rv->AddParam(p);
@@ -358,7 +365,7 @@ MethodSignature* MethodSignature::ObjIn(PELib& peLib, Method** found, bool defin
         }
         if (!rv)
         {
-            rv = peLib.AllocateMethodSignature(name, flags, peLib.GetContainer());
+            rv = new MethodSignature(name, flags, peLib.GetContainer());
             rv->ReturnType(returnType);
             rv->External(external);
             for (auto p : args)
@@ -392,7 +399,7 @@ MethodSignature* MethodSignature::ObjIn(PELib& peLib, Method** found, bool defin
     }
     else if (!name.size())
     {
-        rv = peLib.AllocateMethodSignature(name, flags, peLib.GetContainer());
+        rv = new MethodSignature(name, flags, peLib.GetContainer());
         rv->GenericParamCount(genericParamCount);
         rv->ReturnType(returnType);
         for (auto p : args)

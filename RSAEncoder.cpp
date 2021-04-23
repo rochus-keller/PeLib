@@ -56,6 +56,18 @@ void PKCS1Formatter::Calculate(ByteArray& result)
         result[result.size() - i - 1] = temp;
     }
 }
+RSAEncoder::~RSAEncoder() {
+    if (privateExponent)
+        memset(privateExponent, 0, 2048);
+    if (keyPair)
+        memset(keyPair, 0, 2048);
+    if (modulus)
+        memset(modulus, 0, 2048);
+    delete [] privateExponent;
+    delete [] keyPair;
+    delete [] modulus;
+}
+
 size_t RSAEncoder::LoadStrongNameKeys(const std::string& file)
 {
     int rv = 0;
@@ -111,4 +123,13 @@ void RSAEncoder::GetStrongNameSignature(Byte* sig, size_t* sigSize, const Byte* 
     mpModExp((DIGIT_T*)sig, (DIGIT_T*)x(), (DIGIT_T*)privateExponent, (DIGIT_T*)modulus, modulusBits / 8 / sizeof(DIGIT_T));
     *sigSize = modulusBits / 8;
 }
+
+ByteArray::ByteArray(size_t len) : len_(len), mem_(new Byte[len]) { memset(mem_,0, len_); }
+
+ByteArray::~ByteArray()
+{
+    memset(mem_, 0, len_);
+    delete[] mem_;
+}
+
 }  // namespace DotNetPELib

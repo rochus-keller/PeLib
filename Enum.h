@@ -6,8 +6,6 @@
 
 namespace DotNetPELib
 {
-    class Allocator;
-
     ///** A special kind of class: enum
     class Enum : public Class
     {
@@ -18,7 +16,7 @@ namespace DotNetPELib
         }
         ///** Add an enumeration, give it a name and a value
         // This creates the Field definition for the enumerated value
-        Field *AddValue(Allocator &allocator, const std::string& Name, longlong Value);
+        Field *AddValue(const std::string& Name, longlong Value);
 
         // internal functions
         virtual bool ILSrcDump(PELib &) const override;

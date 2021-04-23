@@ -26,7 +26,7 @@
 #include <array>
 #include <algorithm>
 #include <functional>
-#include "DotNetPELib.h"
+#include "PELib.h"
 #include "PEFile.h"
 
 void DotNetPELib::PEWriter::CreateGuid(Byte* Guid)

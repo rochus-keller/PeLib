@@ -1,6 +1,7 @@
 #include "Resource.h"
 using namespace DotNetPELib;
 
+#if 0
 #ifdef _DEBUG
 QSet<RefCounted*> RefCounted::s_inst;
 #endif
@@ -33,5 +34,14 @@ void RefCounted::release()
     }
 }
 
+#endif
 
 
+
+std::set<Resource*> Resource::s_all;
+
+
+Resource::~Resource()
+{
+    s_all.erase(this);
+}
