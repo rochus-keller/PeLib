@@ -1,6 +1,7 @@
 /* Software License Agreement
  *
  *     Copyright(C) 1994-2020 David Lindauer, (LADSoft)
+ *     With modifications by me@rochus-keller.ch (2021)
  *
  *     This file is part of the Orange C Compiler package.
  *
@@ -341,7 +342,7 @@ Class* Class::ObjIn(PELib& peLib, bool definition)
         }
         else
         {
-            void* result = nullptr;
+            Resource* result = nullptr;
             if (peLib.Find(name, &result) == PELib::s_class)
             {
                 rv = static_cast<Class*>(result);

@@ -1,6 +1,7 @@
 /* Software License Agreement
  *
  *     Copyright(C) 1994-2020 David Lindauer, (LADSoft)
+ *     With modifications by me@rochus-keller.ch (2021)
  *
  *     This file is part of the Orange C Compiler package.
  *
@@ -90,7 +91,7 @@ Enum* Enum::ObjIn(PELib& peLib, bool definition)
     else
     {
         // if we get here it is as an operand
-        void* result;
+        Resource* result;
         if (peLib.Find(name, &result) == PELib::s_enum)
         {
             rv = static_cast<Enum*>(result);

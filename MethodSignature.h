@@ -1,6 +1,31 @@
 #ifndef DotNetPELib_METHODSIGNATURE
 #define DotNetPELib_METHODSIGNATURE
 
+/* Software License Agreement
+ *
+ *     Copyright(C) 1994-2020 David Lindauer, (LADSoft)
+ *     With modifications by me@rochus-keller.ch (2021)
+ *
+ *     This file is part of the Orange C Compiler package.
+ *
+ *     The Orange C Compiler package is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     The Orange C Compiler package is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with Orange C.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *     contact information:
+ *         email: TouchStone222@runbox.com <David Lindauer>
+ *
+ */
+
 #include <PeLib/Resource.h>
 #include <deque>
 #include <vector>
@@ -33,41 +58,40 @@ namespace DotNetPELib
     {
     public:
         enum { Vararg = 1, Managed = 2, InstanceFlag = 4 };
-        MethodSignature(const std::string& Name, int Flags, DataContainer *Container) : container_(Container), name_(Name), flags_(Flags), returnType_(nullptr), ref_(false),
-                peIndex_(0), peIndexCallSite_(0), peIndexType_(0), methodParent_(nullptr), arrayObject_(nullptr), external_(false), definitions_(0), genericParent_(nullptr), genericParamCount_(0)
-        {
-        }
-        MethodSignature(const MethodSignature&) = default;
-        MethodSignature& operator=(const MethodSignature&) = default;
 
-        ///** Get return type
+        MethodSignature(const std::string& Name, int Flags, DataContainer *Container) : container_(Container), name_(Name), flags_(Flags), returnType_(nullptr), ref_(false),
+                peIndex_(0), peIndexCallSite_(0), peIndexType_(0), methodParent_(nullptr), arrayObject_(nullptr), external_(false), definitions_(0), genericParent_(nullptr), genericParamCount_(0){}
+
+        ///** Set/Get return type
         Type *ReturnType() const { return returnType_; }
-        ///** Set return type
-        void ReturnType(Type *type)
-        {
-            returnType_ = type;
-        }
+        void ReturnType(Type *type) { returnType_ = type; }
+
         //* * Add a parameter.  They need to be added in order.
         void AddParam(Param *param);
+
         ///** Add a vararg parameter.   These are NATIVE vararg parameters not
         // C# ones.   They are only added to signatures at a call site...
         void AddVarargParam(Param *param);
+
         ///** This is the parent declaration for a call site signature with vararg
         // params (the methoddef version of the signature)
         void SignatureParent(MethodSignature *parent) { methodParent_ = parent; }
+
         ///** return the parent declaration for a call site signature with vararg
         // params (the methoddef version of the signature)
         MethodSignature *SignatureParent() { return methodParent_; }
-        ///** Set the data container
+
+        ///** Set/Get the data container
         void SetContainer(DataContainer *container) { container_ = container; }
-        ///** Get the data container
         DataContainer *GetContainer() const { return container_; }
-        ///** Get name
+
+        ///** Set/Get name
         const std::string &Name() const { return name_; }
-        ///** Set name
         void SetName(const std::string& Name) { name_ = Name; }
+
         ///** Set Array object
         void ArrayObject(Type *tp) { arrayObject_ = tp; }
+
         // iterate through parameters
         typedef std::list<Param *>::iterator iterator;
         iterator begin() { return params.begin(); }
@@ -75,6 +99,7 @@ namespace DotNetPELib
 
         void GenericParent(MethodSignature* sig) { genericParent_ = sig; }
         MethodSignature* GenericParent() const { return genericParent_; }
+
         ///** return the list of generics
         std::deque<Type*>& Generic() { return generic_; }
         const std::deque<Type*>& Generic() const { return generic_; }
@@ -83,15 +108,9 @@ namespace DotNetPELib
         typedef std::list<Param *>::iterator viterator;
         iterator vbegin() { return varargParams_.begin(); }
         iterator vend() { return varargParams_.end(); }
+
         ///** make it an instance member
-        void Instance(bool instance) {
-            if (instance)
-            {
-                flags_ |= InstanceFlag;
-            }
-            else
-                flags_ &= ~InstanceFlag;
-        }
+        void Instance(bool instance);
         bool Instance() const { return !!(flags_ & InstanceFlag); }
 
         // make it virtual
@@ -100,22 +119,27 @@ namespace DotNetPELib
 
         ///** return qualifiers
         int Flags() const { return flags_; }
+
         ///** return parameter count
         size_t ParamCount() const { return params.size(); }
+
         ///** return vararg parameter count
         size_t VarargParamCount() const { return varargParams_.size(); }
+
         ///** not locally defined
         bool External() const { return external_; }
-        ///** not locally defined
         void External(bool external) { external_ = external; }
+
         ///** increment definition count
         void Definition() { definitions_++; }
-        ///** get definition count
         size_t Definitions() const { return definitions_/2; }
+
         size_t GenericParamCount() const { return genericParamCount_; }
         void GenericParamCount(int count) { genericParamCount_ = count; }
+
         bool MatchesType(Type *tpa, Type *tpp);
         bool Matches(std::vector<Type *> args);
+
         // various indexes into metadata tables
         size_t PEIndex() const { return peIndex_; }
         void PEIndex(size_t val) { peIndex_ = val;  }
@@ -124,6 +148,7 @@ namespace DotNetPELib
 
         // Load a signature
         void Load(PELib &lib, AssemblyDef &assembly, PEReader &reader, int start, int end);
+
         // internal functions
         void Ref(bool Ref) { ref_ = Ref; }
         bool IsRef() const { return ref_; }

@@ -1,6 +1,31 @@
 #ifndef DOTNETPELIB_QUALIFIERS
 #define DOTNETPELIB_QUALIFIERS
 
+/* Software License Agreement
+ *
+ *     Copyright(C) 1994-2020 David Lindauer, (LADSoft)
+ *     With modifications by me@rochus-keller.ch (2021)
+ *
+ *     This file is part of the Orange C Compiler package.
+ *
+ *     The Orange C Compiler package is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     The Orange C Compiler package is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with Orange C.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *     contact information:
+ *         email: TouchStone222@runbox.com <David Lindauer>
+ *
+ */
+
 #include <string>
 
 namespace DotNetPELib
@@ -50,34 +75,35 @@ namespace DotNetPELib
             PInvokeFunc = HideBySig | Static | PreserveSig,
             ManagedFunc = HideBySig | Static | CIL | Managed
         };
-        Qualifiers() : flags_(0)
-        {
-        }
-        Qualifiers(int Flags) : flags_(Flags)
-        {
-        }
-        Qualifiers(const Qualifiers &old)
-        {
-            flags_ = old.flags_;
-        }
+
+        Qualifiers() : flags_(0){}
+        Qualifiers(int Flags) : flags_(Flags) {}
+        Qualifiers(const Qualifiers &old) { flags_ = old.flags_; }
+
         Qualifiers &operator |=(int flags)
         {
             flags_ |= flags;
             return *this;
         }
+
         ///** most qualifiers come before the name of the item
         void ILSrcDumpBeforeFlags(PELib &) const;
+
         ///** but a couple of the method qualifiers come after the method definition
         void ILSrcDumpAfterFlags(PELib &) const;
+
         ///** get a name for a DataContainer object, suitable for use in an ASM file
         // The main problem is there is a separator character between the first class encountered
         // and its members, which is different depending on whether it is a type or a field
         static std::string GetName(const std::string& root, const DataContainer *parent, bool type = false);
         static std::string GetObjName(const std::string& root, const DataContainer *parent);
+
+        // internal stuff
         virtual void ObjOut(PELib &, int pass) const;
         void ObjIn(PELib &, bool definition = true);
         int Flags() const { return flags_; }
         void Flags(int flags) { flags_ = flags;  }
+
     protected:
         static void ReverseNamePrefix(std::string&rv, const DataContainer *parent, int &pos, bool type);
         static std::string GetNamePrefix(const DataContainer *parent, bool type);

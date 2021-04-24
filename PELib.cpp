@@ -1,6 +1,7 @@
 /* Software License Agreement
  *
  *     Copyright(C) 1994-2020 David Lindauer, (LADSoft)
+ *     With modifications by me@rochus-keller.ch (2021)
  *
  *     This file is part of the Orange C Compiler package.
  *
@@ -117,6 +118,11 @@ void PELib::AddExternalAssembly(const std::string& assemblyName, Byte* publicKey
     AssemblyDef* assemblyRef = new AssemblyDef(assemblyName, true, publicKeyToken);
     assemblyRefs_.push_back(assemblyRef);
 }
+
+void PELib::SetLibPath(const std::string& paths)
+{
+    libPath_ = paths;
+}
 void PELib::AddPInvokeReference(MethodSignature* methodsig, const std::string& dllname, bool iscdecl)
 {
     Method* m = new Method(methodsig, Qualifiers::PInvokeFunc | Qualifiers::Public);
@@ -211,7 +217,7 @@ void PELib::SplitPath(std::vector<std::string>& split, std::string path)
             }
     }
 }
-PELib::eFindType PELib::Find(std::string path, void **result, std::deque<Type*>* generics, AssemblyDef *assembly)
+PELib::eFindType PELib::Find(std::string path, Resource** result, std::deque<Type*>* generics, AssemblyDef *assembly)
 {
     if (path.size() && path[0] == '[')
     {
@@ -341,7 +347,7 @@ PELib::eFindType PELib::Find(std::string path, void **result, std::deque<Type*>*
 }
 Class* PELib::FindOrCreateGeneric(std::string name, std::deque<Type*>& generics)
 {
-    void *result = nullptr;
+    Resource *result = nullptr;
     if (Find(name, &result, &generics) == s_class)
     {
         return static_cast<Class *>(result);
@@ -374,7 +380,7 @@ Byte*PELib::AllocateBytes(size_t sz)
     return res;
 }
 
-PELib::eFindType PELib::Find(std::string path, Method **result, std::vector<Type *> args, Type* rv, std::deque<Type*>* generics, AssemblyDef *assembly, bool matchArgs)
+PELib::eFindType PELib::Find(std::string path, Method **result, const std::vector<Type*>& args, Type* rv, std::deque<Type*>* generics, AssemblyDef *assembly, bool matchArgs)
 {
     if (path.size() && path[0] == '[')
     {
@@ -516,7 +522,7 @@ bool PELib::ObjOut()
     *outputStream_ << "$qe";
     return true;
 }
-bool PELib::LoadObject(const std::string& name)
+bool PELib::LoadObjectFile(const std::string& name)
 {
     bool rv = false;
     inputStream_ = new std::fstream(name, std::ios::in);
@@ -793,7 +799,7 @@ bool PELib::DumpPEFile(std::string file, bool isexe, bool isgui)
         ResolutionScope rs(ResolutionScope::AssemblyRef, assemblyIndex);
         if (types & DataContainer::basetypeObject)
         {
-            void* result = nullptr;
+            Resource* result = nullptr;
             table = new TypeRefTableEntry(rs, objectIndex, systemIndex);
             objectIndex = peWriter_->AddTableEntry(table);
             Find("[mscorlib]System::Object", &result);
@@ -802,7 +808,7 @@ bool PELib::DumpPEFile(std::string file, bool isexe, bool isgui)
         }
         if (types & DataContainer::basetypeValue)
         {
-            void* result = nullptr;
+            Resource* result = nullptr;
             table = new TypeRefTableEntry(rs, valueIndex, systemIndex);
             valueIndex = peWriter_->AddTableEntry(table);
             Find("[mscorlib]System::ValueType", &result);
@@ -811,7 +817,7 @@ bool PELib::DumpPEFile(std::string file, bool isexe, bool isgui)
         }
         if (types & DataContainer::basetypeEnum)
         {
-            void* result = nullptr;
+            Resource* result = nullptr;
             table = new TypeRefTableEntry(rs, enumIndex, systemIndex);
             enumIndex = peWriter_->AddTableEntry(table);
             Find("[mscorlib]System::Enum", &result);
@@ -856,6 +862,8 @@ int PELib::LoadAssembly(const std::string& assemblyName, int major, int minor, i
     if (assembly == nullptr || !assembly->IsLoaded())
     {
         PEReader r;
+        if( !libPath_.empty() )
+            r.LibPath(libPath_);
         int n = r.ManagedLoad(assemblyName, major, minor, build, revision);
         if (!n)
         {

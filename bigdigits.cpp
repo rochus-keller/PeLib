@@ -85,6 +85,8 @@ static const int kUseNoAllocs = 0;
 /****************************/
 /* Change these to suit your tastes and operating system. */
 #if defined(_WIN32) || defined(WIN32)
+#undef UNICODE
+#include <windows.h>
 /* Win32 GUI alternative */
 #    ifndef STRICT
 #        define STRICT
@@ -93,7 +95,8 @@ static const int kUseNoAllocs = 0;
 #    include <windows.h>
 void mpFail(const char* msg)
 {
-    MessageBox(NULL, msg, "BigDigits Error", MB_ICONERROR);
+    // MessageBox(NULL, msg, "BigDigits Error", MB_ICONERROR);
+    throw "BigDigits Error";
     exit(EXIT_FAILURE);
 }
 #else  /* Ordinary console program */

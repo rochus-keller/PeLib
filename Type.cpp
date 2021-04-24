@@ -1,6 +1,7 @@
 /* Software License Agreement
  *
  *     Copyright(C) 1994-2020 David Lindauer, (LADSoft)
+ *     With modifications by me@rochus-keller.ch (2021)
  *
  *     This file is part of the Orange C Compiler package.
  *
@@ -40,6 +41,15 @@ const char* Type::typeNames_[] = {"",        "",        "", "", "void",   "bool"
 const char* BoxedType::typeNames_[] = {"",        "",       "",       "", "", "Bool",   "Char",  "SByte",  "Byte",
                                        "Int16",   "UInt16", "Int32",  "UInt32", "Int64", "UInt64", "IntPtr",
                                        "UIntPtr", "Single", "Double", "Object", "String"};
+
+Type::Type(Type::BasicType Tp, int PointerLevel) : tp_(Tp), arrayLevel_(0), byRef_(false), typeRef_(nullptr), methodRef_(nullptr), peIndex_(0), pinned_(false), showType_(false), varnum_(0)
+{
+    if (Tp == var || Tp == mvar)
+        varnum_ = PointerLevel;
+    else
+        pointerLevel_ = PointerLevel;
+}
+
 bool Type::Matches(Type* right)
 {
     if (tp_ != right->tp_)
@@ -320,7 +330,7 @@ size_t BoxedType::Render(PELib& peLib, Byte* result)
         size_t system = peLib.PEOut().SystemName();
         size_t name = peLib.PEOut().HashString(typeNames_[tp_]);
         AssemblyDef* assembly = peLib.MSCorLibAssembly();
-        void* result = nullptr;
+        Resource* result = nullptr;
         peLib.Find(std::string("System.") + typeNames_[tp_], &result, nullptr, assembly);
         if (result)
         {

@@ -1,6 +1,7 @@
 /* Software License Agreement
  *
  *     Copyright(C) 1994-2020 David Lindauer, (LADSoft)
+ *     With modifications by me@rochus-keller.ch (2021)
  *
  *     This file is part of the Orange C Compiler package.
  *
@@ -23,6 +24,7 @@
  */
 
 #ifdef _WIN32
+#undef UNICODE
 #    include "Windows.h"
 #endif
 #include "PELib.h"
@@ -35,7 +37,7 @@
 namespace DotNetPELib
 {
 
-std::string DIR_SEP = "\\";
+std::string DIR_SEP = "/";
 TableEntryBase* TableEntryFactory::GetEntry(size_t index)
 {
     switch (index)

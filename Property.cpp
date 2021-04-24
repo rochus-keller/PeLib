@@ -1,6 +1,7 @@
 /* Software License Agreement
  *
  *     Copyright(C) 1994-2020 David Lindauer, (LADSoft)
+ *     With modifications by me@rochus-keller.ch (2021)
  *
  *     This file is part of the Orange C Compiler package.
  *
@@ -45,6 +46,13 @@ void Property::Instance(bool instance)
     if (setter_)
         setter_->Instance(instance);
 }
+Property::Property(PELib& peLib, const std::string& name, Type* type,
+                   std::vector<Type*>& indices, bool hasSetter, DataContainer* parent)
+    : name_(name), parent_(parent), type_(type), flags_(SpecialName), instance_(true), getter_(nullptr), setter_(nullptr)
+{
+    CreateFunctions(peLib, indices, hasSetter);
+}
+
 void Property::SetContainer(DataContainer* parent, bool add)
 {
     if (!parent_)

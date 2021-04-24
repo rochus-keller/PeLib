@@ -1,3 +1,7 @@
+24.04.2021 
+	many fixes and refactorings to make it work with c++11, Linux and Mono, increase compilation speed,
+	decrease complexity
+
 Version 3.03:
 	add support for explicit types (for sizeof)
 	add support for pinning

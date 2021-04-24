@@ -1,6 +1,7 @@
 /* Software License Agreement
  *
  *     Copyright(C) 1994-2020 David Lindauer, (LADSoft)
+ *     With modifications by me@rochus-keller.ch (2021)
  *
  *     This file is part of the Orange C Compiler package.
  *
@@ -367,7 +368,7 @@ bool Method::PEDump(PELib& peLib)
             {
                 size_t ctor_index = 0;
                 AssemblyDef* assembly = peLib.MSCorLibAssembly();
-                void* result = nullptr;
+                Resource* result = nullptr;
                 peLib.Find("System.ParamArrayAttribute::.ctor", &result, nullptr, assembly);
                 if (result)
                 {

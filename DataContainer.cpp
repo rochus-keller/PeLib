@@ -1,6 +1,7 @@
 /* Software License Agreement
  *
  *     Copyright(C) 1994-2020 David Lindauer, (LADSoft)
+ *     With modifications by me@rochus-keller.ch (2021)
  *
  *     This file is part of the Orange C Compiler package.
  *
@@ -35,6 +36,16 @@
 #include <typeinfo>
 namespace DotNetPELib
 {
+void DataContainer::Add(DataContainer* item)
+{
+    if (item)
+    {
+        item->parent_ = this;
+        children_.push_back(item);
+        sortedChildren_[item->name_].push_back(item);
+    }
+}
+
 void DataContainer::Add(CodeContainer* item)
 {
     if (item)

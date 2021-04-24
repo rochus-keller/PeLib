@@ -1,6 +1,31 @@
 #ifndef DotNetPELib_INSTRUCTION
 #define DotNetPELib_INSTRUCTION
 
+/* Software License Agreement
+ *
+ *     Copyright(C) 1994-2020 David Lindauer, (LADSoft)
+ *     With modifications by me@rochus-keller.ch (2021)
+ *
+ *     This file is part of the Orange C Compiler package.
+ *
+ *     The Orange C Compiler package is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     The Orange C Compiler package is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with Orange C.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *     contact information:
+ *         email: TouchStone222@runbox.com <David Lindauer>
+ *
+ */
+
 #include <PeLib/Resource.h>
 #include <map>
 #include <list>
@@ -60,8 +85,13 @@ namespace DotNetPELib
             i_unaligned_, i_unbox, i_unbox_any, i_volatile_, i_xor
         };
         enum iseh { seh_try, seh_catch, seh_finally, seh_fault, seh_filter, seh_filter_handler };
+        enum ioperand {
+            o_none, o_single, o_rel1, o_rel4, o_index1, o_index2, o_index4,
+            o_immed1, o_immed4, o_immed8, o_float4, o_float8, o_switch
+        };
 
         Instruction(iop Op, Operand *Operand = 0);
+
         // for now only do comments and labels and branches...
         Instruction(iop Op, const std::string& Text) : op_(Op), text_(Text), switches_(nullptr), live_(false), sehType_(seh_try), sehBegin_(false), sehCatchType_(nullptr), offset_(0) { }
 
@@ -69,57 +99,71 @@ namespace DotNetPELib
 
         virtual ~Instruction() { if (switches_) delete switches_; }
 
-        ///** Get the opcode
+        ///** Get/set the opcode
         iop OpCode() const { return op_; }
-        ///** Set the opcode
         void OpCode(iop Op) { op_ = Op; }
+
         ///** Get the SEH Type
         int SEHType() const { return sehType_;  }
+
         ///** return true if it is a begin tag
         bool SEHBegin() const { return sehBegin_;  }
+
         ///** return the catch type
         Type *SEHCatchType() const { return sehCatchType_; }
+
         ///** Add a label for a SWITCH instruction
         ///** Labels MUST be added in order
         void AddCaseLabel(const std::string& label);
+
         ///** Get the set of case labels
         std::list<std::string> * GetSwitches() { return switches_; }
+
         ///** an 'empty' operand
         void NullOperand();
+
         ///** Get the operand (CIL instructions have either zero or 1 operands)
         Operand *GetOperand() const { return operand_; }
         void SetOperand(Operand *operand) { operand_ = operand; }
 
         ///** Get text, e.g. for a comment
         std::string Text() const { return text_; }
+
         ///** Get the label name associated with the instruction
         std::string Label() const;
+
         ///** The offset of the instruction within the method
         int Offset() const { return offset_; }
-        ///** Set the offset of the instruction within the method
         void Offset(int Offset) { offset_ = Offset; }
+
         ///** Calculate length of instruction
         int InstructionSize();
+
         ///** get stack use for this instruction
         // positive means it adds to the stack, negative means it subtracts
         // 0 means it has no effect
         int StackUsage();
+
         ///** is a branch with a 4 byte relative offset
         int IsRel4() const { return instructions_[op_].operandType == o_rel4; }
+
         ///** is a branch with a 1 byte relative offset
         int IsRel1() const { return instructions_[op_].operandType == o_rel1; }
+
         ///** is any kind of branch
         int IsBranch() const { return IsRel1() || IsRel4(); }
+
         ///** Convert a 4-byte branch to a 1-byte branch
         void Rel4To1() { op_ = (iop)((int)op_ + 1); }
+
         ///** Is it any kind of call
         int IsCall() const {
             return op_ == i_call || op_ == i_calli || op_ == i_callvirt;
         }
+
         ///** Set the live flag.   We are checking for live because sometimes
         // dead code sequences can confuse the stack checking routine
         void Live(bool val) { live_ = val; }
-        ///** is it live?
         bool IsLive() const { return live_; }
 
         // internal methods and structures
@@ -127,18 +171,7 @@ namespace DotNetPELib
         size_t Render(PELib & peLib, Byte *, std::map<std::string, Instruction *> &labels);
         virtual void ObjOut(PELib &, int pass) const;
         static Instruction *ObjIn(PELib &);
-        enum ioperand {
-            o_none, o_single, o_rel1, o_rel4, o_index1, o_index2, o_index4,
-            o_immed1, o_immed4, o_immed8, o_float4, o_float8, o_switch
-        };
-        struct InstructionName {
-            const char *name;
-            Byte op1;
-            Byte op2;
-            Byte bytes;
-            Byte operandType;
-            char stackUsage; // positive it adds to stack, negative it consumes stack
-        };
+
     protected:
         std::list<std::string> *switches_;
         iop op_;
@@ -151,6 +184,14 @@ namespace DotNetPELib
         };
         std::string text_; // for comments
         bool live_;
+        struct InstructionName {
+            const char *name;
+            Byte op1;
+            Byte op2;
+            Byte bytes;
+            Byte operandType;
+            char stackUsage; // positive it adds to stack, negative it consumes stack
+        };
         static InstructionName instructions_[];
     };
 }

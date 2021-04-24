@@ -1,6 +1,7 @@
 /* Software License Agreement
  *
  *     Copyright(C) 1994-2020 David Lindauer, (LADSoft)
+ *     With modifications by me@rochus-keller.ch (2021)
  *
  *     This file is part of the Orange C Compiler package.
  *
@@ -99,6 +100,16 @@ void MethodSignature::AddVarargParam(Param* param)
 {
     param->Index(params.size() + varargParams_.size());
     varargParams_.push_back(param);
+}
+
+void MethodSignature::Instance(bool instance)
+{
+    if (instance)
+    {
+        flags_ |= InstanceFlag;
+    }
+    else
+        flags_ &= ~InstanceFlag;
 }
 bool MethodSignature::ILSrcDump(PELib& peLib, bool names, bool asType, bool PInvoke) const
 {

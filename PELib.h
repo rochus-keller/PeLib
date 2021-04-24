@@ -1,29 +1,30 @@
+#ifndef DOTNETPELIB_H
+#define DOTNETPELIB_H
+
 /* Software License Agreement
- * 
+ *
  *     Copyright(C) 1994-2020 David Lindauer, (LADSoft)
- * 
+ *     With modifications by me@rochus-keller.ch (2021)
+ *
  *     This file is part of the Orange C Compiler package.
- * 
+ *
  *     The Orange C Compiler package is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
- * 
+ *
  *     The Orange C Compiler package is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
  *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *     GNU General Public License for more details.
- * 
+ *
  *     You should have received a copy of the GNU General Public License
  *     along with Orange C.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  *     contact information:
  *         email: TouchStone222@runbox.com <David Lindauer>
- * 
+ *
  */
-
-#ifndef DOTNETPELIB_H
-#define DOTNETPELIB_H
 
 #include <memory>
 #include <vector>
@@ -116,6 +117,7 @@ namespace DotNetPELib
     class DataContainer;
     class CodeContainer;
     class Namespace;
+    class Resource;
 
 
     ///** this is the main class to instantiate
@@ -143,31 +145,47 @@ namespace DotNetPELib
             bits32 = 2
         };
         enum OutputMode { ilasm, peexe, pedll, object };
+
         ///** Constructor, creates a working assembly
-        PELib(const std::string& AssemblyName, int CoreFlags);
+        PELib(const std::string& AssemblyName, int CoreFlags = PELib::ilonly | PELib::bits32 );
+
         ~PELib();
+
         ///** Get the working assembly
         // This is the one with your code and data, that gets written to the output
         AssemblyDef *WorkingAssembly() const { return assemblyRefs_.front(); }
+
         ///** replace the working assembly with an empty one.   Data is not deleted and
         /// still remains a part of the PELib instance.
         AssemblyDef *EmptyWorkingAssembly(const std::string& AssemblyName);
+
         ///** Add a reference to another assembly
         // this is an empty assembly you can put stuff in if you want to
-        void AddExternalAssembly(const std::string& assemblyName, Byte *publicKeyToken = nullptr);
+        void AddExternalAssembly(const std::string& assemblyName, Byte *publicKeyToken = nullptr); // deprecated
+
+        // set the paths where assemblies are looked for. More than one path can be separated by ';'.
+        void SetLibPath( const std::string& paths );
+
         ///** Load data out of an assembly
         int LoadAssembly(const std::string& assemblyName, int major = 0, int minor = 0, int build = 0, int revision = 0);
+
         ///* Load data out of an unmanaged DLL
         int LoadUnmanaged(const std::string& dllName);
+
         ///** Load an object file
-        bool LoadObject(const std::string& name);
+        bool LoadObjectFile(const std::string& name);
+
         ///** find an unmanaged dll name
         std::string FindUnmanagedName(const std::string& name);
-        ///** Find an assembly
+
+        ///** Find an assembly (in the already loaded set)
         AssemblyDef *FindAssembly(const std::string& assemblyName) const;
+
         ///** Find a Class
+        // this is just a combination of a bunch of other API calls
         Class *LookupClass(PEReader &reader, const std::string& assembly, int major, int minor, int build, int revision,
                            size_t keyIndex, const std::string& nameSpace, const std::string& name);
+
         ///** Pinvoke references are always added to this object
         void AddPInvokeReference(MethodSignature *methodsig, const std::string& dllname, bool iscdecl);
         void AddPInvokeWithVarargs(MethodSignature *methodsig);
@@ -176,12 +194,14 @@ namespace DotNetPELib
         }
         Method *FindPInvoke(const std::string& name) const;
         MethodSignature *FindPInvokeWithVarargs(const std::string& name, std::vector<Param *>&vargs) const;
+
         // get the core flags
         int GetCorFlags() const { return corFlags_; }
 
         ///** write an output file, possibilities are a .il file, an EXE or a DLL
         // the file can also be tagged as either console or win32
         bool DumpOutputFile(const std::string& fileName, OutputMode mode, bool Gui);
+
         const std::string &FileName() const { return fileName_; }
 
         ///** add to the search path, returns true if it finds a namespace at path
@@ -189,10 +209,12 @@ namespace DotNetPELib
         bool AddUsing(const std::string& path);
 
         ///** find something, return value tells what type of object was found
-        eFindType Find(std::string path, void **result, std::deque<Type*>* generics = nullptr, AssemblyDef *assembly = nullptr);
+        eFindType Find(std::string path, Resource **result,
+                       std::deque<Type*>* generics = nullptr, AssemblyDef *assembly = nullptr);
 
         ///** find a method, with overload matching
-        eFindType Find(std::string path, Method **result, std::vector<Type *> args, Type* rv = nullptr, std::deque<Type*>* generics = nullptr, AssemblyDef *assembly = nullptr, bool matchArgs = true);
+        eFindType Find(std::string path, Method **result, const std::vector<Type *>& args, Type* rv = nullptr,
+                       std::deque<Type*>* generics = nullptr, AssemblyDef *assembly = nullptr, bool matchArgs = true);
 
         ///** Traverse the declaration tree
         void Traverse(Callback &callback) const;
@@ -202,8 +224,11 @@ namespace DotNetPELib
         AssemblyDef *MSCorLibAssembly();
 
         std::string FormatName(const std::string& name);
+
         std::string UnformatName();
+
         virtual bool ILSrcDump(PELib &) { return ILSrcDumpHeader() && ILSrcDumpFile(); }
+
         bool ObjOut();
         bool ObjIn();
         longlong ObjInt();
@@ -249,6 +274,7 @@ namespace DotNetPELib
         int objInputPos_;
         int objInputCache_;
         std::deque<Byte*> allocatedBytes_;
+        std::string libPath_;
     };
 
 } // namespace
