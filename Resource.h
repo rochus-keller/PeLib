@@ -12,7 +12,8 @@
  *     (at your option) any later version.
  */
 
-#include <set>
+#include <deque>
+#include <stddef.h>
 
 namespace DotNetPELib
 {
@@ -90,12 +91,33 @@ namespace DotNetPELib
     class Resource
     {
     public:
-        Resource() { s_all.insert(this); }
-    protected:
-        virtual ~Resource();
+        Resource() {}
+        virtual ~Resource() {}
+
+        void* operator new( size_t size)
+        {
+            // avoid stack allocated objects from s_all
+            void* ptr = ::operator new(size);
+            s_all.push_back((Resource*)ptr);
+            return ptr;
+        }
+        void operator delete(void* ptr)
+        {
+            // usually only PELib calls delete on these objects
+            for( int i = 0; i < s_all.size(); i++ )
+            {
+                if( s_all[i] == (Resource*)ptr )
+                {
+                    s_all[i] = 0;
+                    break;
+                }
+            }
+            ::operator delete(ptr);
+        }
+
     private:
         friend class PELib;
-        static std::set<Resource*> s_all; // TODO replace with RefCounted
+        static std::deque<Resource*> s_all; // TODO replace with RefCounted
     };
 }
 

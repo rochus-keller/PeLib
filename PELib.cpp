@@ -70,10 +70,15 @@ PELib::PELib(const std::string& AssemblyName, int CoreFlags) :
 
 PELib::~PELib()
 {
-    std::set<Resource*>::const_iterator j;
-    for( j = Resource::s_all.begin(); j != Resource::s_all.end(); ++j )
-        delete *j;
+    std::deque<Resource*> all;
+    all.swap(Resource::s_all);
     assert( Resource::s_all.empty() );
+    std::deque<Resource*>::const_iterator j;
+    for( j = all.begin(); j != all.end(); ++j )
+    {
+        if( *j )
+            delete *j;
+    }
     std::deque<Byte*>::const_iterator i;
     for( i = allocatedBytes_.begin(); i != allocatedBytes_.end(); ++i )
         delete[] *i;

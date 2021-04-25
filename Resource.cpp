@@ -49,10 +49,7 @@ void RefCounted::release()
 
 
 
-std::set<Resource*> Resource::s_all;
+std::deque<Resource*> Resource::s_all;
 
 
-Resource::~Resource()
-{
-    s_all.erase(this);
-}
+
