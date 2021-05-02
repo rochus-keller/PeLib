@@ -75,6 +75,7 @@ namespace DotNetPELib
 
         quint32 addLocal( const QByteArray& typeQualifier, QByteArray name = QByteArray() );
         quint32 addArgument(const QByteArray& typeQualifier, QByteArray name = QByteArray() );
+        void setReturnType(const QByteArray& typeQualifier);
 
         quint32 newLabel();
 

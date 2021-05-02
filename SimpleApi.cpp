@@ -420,6 +420,13 @@ quint32 SimpleApi::addArgument(const QByteArray& typeQualifier, QByteArray name)
     return p->Index();
 }
 
+void SimpleApi::setReturnType(const QByteArray& typeQualifier)
+{
+    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp->d_meth );
+    d_imp->d_meth->Signature()->ReturnType(d_imp->findType(typeQualifier));
+}
+
 void SimpleApi::ADD(bool withOverflow, bool withUnsignedOverflow)
 {
     Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
