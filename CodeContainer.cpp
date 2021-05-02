@@ -343,9 +343,9 @@ void CodeContainer::OptimizeLDARG(PELib& peLib)
             case Instruction::i_starg:
                 operand = instruction->GetOperand();
                 v = operand->GetValue();
-                if (v && typeid(*v) == typeid(Param))
+                if ( Param* p = dynamic_cast<Param*>(v))
                 {
-                    int index = ((Param*)v)->Index();
+                    int index = p->Index();
                     switch (instruction->OpCode())
                     {
                         case Instruction::i_ldarg:
@@ -361,7 +361,9 @@ void CodeContainer::OptimizeLDARG(PELib& peLib)
                                 {
                                     instruction->OpCode(Instruction::i_ldarg_s);
                                 }
-                                if (instruction->GetOperand()->OperandType() == Operand::t_value && instruction->GetOperand()->GetValue()->GetType() && instruction->GetOperand()->GetValue()->GetType()->GetBasicType() == Type::mvar)
+                                if (instruction->GetOperand()->OperandType() == Operand::t_value &&
+                                        instruction->GetOperand()->GetValue()->GetType() &&
+                                        instruction->GetOperand()->GetValue()->GetType()->GetBasicType() == Type::mvar)
                                 {
                                     instruction->SetOperand(new Operand(index, Operand::i32));
                                 }
@@ -372,7 +374,9 @@ void CodeContainer::OptimizeLDARG(PELib& peLib)
                             {
                                 instruction->OpCode(Instruction::i_ldarga_s);
                             }
-                            if (instruction->GetOperand()->OperandType() == Operand::t_value && instruction->GetOperand()->GetValue()->GetType() && instruction->GetOperand()->GetValue()->GetType()->GetBasicType() == Type::mvar)
+                            if (instruction->GetOperand()->OperandType() == Operand::t_value &&
+                                    instruction->GetOperand()->GetValue()->GetType() &&
+                                    instruction->GetOperand()->GetValue()->GetType()->GetBasicType() == Type::mvar)
                             {
                                 instruction->SetOperand(new Operand(index, Operand::i32));
                             }
@@ -382,7 +386,9 @@ void CodeContainer::OptimizeLDARG(PELib& peLib)
                             {
                                 instruction->OpCode(Instruction::i_starg_s);
                             }
-                            if (instruction->GetOperand()->OperandType() == Operand::t_value && instruction->GetOperand()->GetValue()->GetType() && instruction->GetOperand()->GetValue()->GetType()->GetBasicType() == Type::mvar)
+                            if (instruction->GetOperand()->OperandType() == Operand::t_value &&
+                                    instruction->GetOperand()->GetValue()->GetType() &&
+                                    instruction->GetOperand()->GetValue()->GetType()->GetBasicType() == Type::mvar)
                             {
                                 instruction->SetOperand(new Operand(index, Operand::i32));
                             }
@@ -430,7 +436,7 @@ bool CodeContainer::ModifyBranches()
 void CodeContainer::ValidateInstructions()
 {
     CalculateOffsets();
-    for (auto instruction : instructions_)
+    for (Instruction * instruction : instructions_)
     {
         if (instruction->IsBranch())
         {

@@ -102,6 +102,17 @@ void MethodSignature::AddVarargParam(Param* param)
     varargParams_.push_back(param);
 }
 
+Param*MethodSignature::getParam(int i) const
+{
+    std::list<Param *>::const_iterator j;
+    for( j = params.begin(); j != params.end(); ++j )
+    {
+        if( (*j)->Index() == i )
+            return (*j);
+    }
+    return 0;
+}
+
 void MethodSignature::Instance(bool instance)
 {
     if (instance)

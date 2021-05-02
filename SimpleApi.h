@@ -36,6 +36,7 @@ namespace DotNetPELib
         // qualifier: composite name,
         // optionally with [assembly], namespace, etc.
         // optionally with argument types (t1,t2,..), where tn are qualifiers or native type names
+        // optionally with '&' postfix (applicability is not checked by PeLib!)
         // both valid: Namespace.Class and Namespace::Class
         // identifier start with alpha, #, $, @ or _ and continue with alphanumeric, ?, $, @, _ or `
 
@@ -72,8 +73,8 @@ namespace DotNetPELib
                        bool isPublic,
                        bool isStatic );
 
-        void addLocal( const QByteArray& varName, const QByteArray& typeQualifier );
-        void addParam( const QByteArray& varName, const QByteArray& typeQualifier );
+        quint32 addLocal( const QByteArray& typeQualifier, QByteArray name = QByteArray() );
+        quint32 addArgument(const QByteArray& typeQualifier, QByteArray name = QByteArray() );
 
         quint32 newLabel();
 

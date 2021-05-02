@@ -89,7 +89,7 @@ namespace DotNetPELib
     class Param : public Value
     {
     public:
-        Param(const std::string& Name, Type *Tp) : Value(Name, Tp), index_(-1) { }
+        Param(const std::string& Name, Type *Tp, int index = -1) : Value(Name, Tp), index_(index) { }
 
         ///** return index of argument
         void Index(int Index) { index_ = Index; }

@@ -96,6 +96,7 @@ namespace DotNetPELib
         typedef std::list<Param *>::iterator iterator;
         iterator begin() { return params.begin(); }
         iterator end() { return params.end(); }
+        Param* getParam( int i ) const;
 
         void GenericParent(MethodSignature* sig) { genericParent_ = sig; }
         MethodSignature* GenericParent() const { return genericParent_; }

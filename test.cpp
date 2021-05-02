@@ -75,7 +75,7 @@ void test3()
 {
     SimpleApi api;
 
-    //try
+    try
     {
         api.beginModule("Test3");
         api.beginNamespace("Gugus");
@@ -93,19 +93,63 @@ void test3()
         api.writeAssembler("test3.il");
         api.endModule();
     }
-#if 0
     catch( const std::runtime_error& e )
     {
         qCritical() << e.what();
     }
-#endif
+}
+
+void test4()
+{
+    SimpleApi api;
+
+    try
+    {
+        api.beginModule("Test4");
+        api.addModuleReference("mscorlib");
+
+        api.addField("myString", "string", false, true );
+
+        api.beginMethod(".cctor",false,true,false);
+        api.LDSTR("Hello from .cctor!");
+        api.STSFLD("myString");
+        api.RET();
+        api.endMethod();
+
+        api.beginMethod("Test", false, true, false );
+        api.addArgument("string&");
+        api.LDARG(0);
+        api.LDSTR("Hello from Test1!");
+        api.STIND(SimpleApi::Ref);
+        api.RET();
+        api.endMethod();
+
+        api.beginMethod( "Main", true, true, true );
+        api.LDSFLD("myString");
+        api.CALL("System.Console.WriteLine(string)");
+        api.LDSFLDA("myString");
+        api.CALL("Test");
+        api.LDSFLD("myString");
+        api.CALL("System.Console.WriteLine(string)");
+        api.RET();
+        api.endMethod();
+
+        api.writeByteCode("test4.exe");
+        api.writeAssembler("test4.il");
+        api.endModule();
+    }
+    catch( const std::runtime_error& e )
+    {
+        qCritical() << e.what();
+    }
 }
 
 int main()
 {
-    //test1();
-    //test2();
+    test1();
+    test2();
     test3();
+    test4();
 
     return 0;
 }

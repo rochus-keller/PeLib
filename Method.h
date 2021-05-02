@@ -72,6 +72,7 @@ namespace DotNetPELib
         iterator begin() { return varList_.begin(); }
         iterator end() { return varList_.end(); }
         size_t size() const { return varList_.size(); }
+        Local* getLocal(int i) const { return varList_[i]; }
 
         // Internal functions
         void MaxStack(int stack) { maxStack_ = stack;  }

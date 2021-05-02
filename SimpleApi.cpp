@@ -73,7 +73,13 @@ public:
             for( int i = 0; i < tmp.size(); i++ )
             {
                 // TODO: array support
-                const QByteArray arg = tmp[i].simplified();
+                QByteArray arg = tmp[i].simplified();
+                if( arg.endsWith('&') )
+                {
+                    // Byref is not relevant for matching, just remove it
+                    arg.chop(1);
+                    arg = arg.trimmed();
+                }
                 QHash<QByteArray,Type>::const_iterator j = d_basicTypes.find(arg);
                 if( j != d_basicTypes.end() )
                     args1.push_back( j.value() );
@@ -111,19 +117,38 @@ public:
         return res.first;
     }
 
-    Type* findType( const QByteArray& path )
+    Type* findType( QByteArray path )
     {
-        // TODO: array support
+        // TODO: array support, method pointers
+        path = path.simplified();
+        bool byref;
+        if( path.endsWith('&') )
+        {
+            path.chop(1);
+            path = path.trimmed();
+            byref = true;
+        }
         QHash<QByteArray,Type>::iterator j = d_basicTypes.find(path);
         if( j != d_basicTypes.end() )
-            return &j.value();
-        else
+        {
+            if( !byref )
+                return &j.value();
+            else
+            {
+                Type* t = new Type( j.value().GetBasicType() );
+                t->ByRef(true);
+                return t;
+            }
+        }else
         {
             Resource* res;
             const PELib::eFindType what = Find( path.constData(), &res );
             if( what == PELib::s_class || what == PELib::s_enum )
-                return new Type(static_cast<Class*>(res));
-            else
+            {
+                Type* t = new Type(static_cast<Class*>(res));
+                t->ByRef(byref);
+                return t;
+            }else
                 throw PELibError(PELibError::NotSupported, path.constData() );
         }
         return 0;
@@ -373,25 +398,31 @@ void SimpleApi::addField(const QByteArray& fieldName, const QByteArray& typeQual
         d_imp->d_classStack.back()->Add(f);
 }
 
-void SimpleApi::addLocal(const QByteArray& varName, const QByteArray& typeQualifier)
+quint32 SimpleApi::addLocal(const QByteArray& typeQualifier, QByteArray name)
 {
     Q_ASSERT( d_imp != 0 );
     Q_ASSERT( d_imp->d_meth );
-    Local* l = new Local( varName.constData(), d_imp->findType(typeQualifier) );
+    if( name.isEmpty() )
+        name = "loc" + QByteArray::number(d_imp->d_meth->size());
+    Local* l = new Local( name.constData(), d_imp->findType(typeQualifier) );
     d_imp->d_meth->AddLocal( l );
+    return l->Index();
 }
 
-void SimpleApi::addParam(const QByteArray& varName, const QByteArray& typeQualifier)
+quint32 SimpleApi::addArgument(const QByteArray& typeQualifier, QByteArray name)
 {
     Q_ASSERT( d_imp != 0 );
     Q_ASSERT( d_imp->d_meth );
-    Param* p = new Param( varName.constData(), d_imp->findType(typeQualifier) );
+    if( name.isEmpty() )
+        name = "arg" + QByteArray::number( d_imp->d_meth->Signature()->ParamCount() );
+    Param* p = new Param( name.constData(), d_imp->findType(typeQualifier) );
     d_imp->d_meth->Signature()->AddParam( p );
+    return p->Index();
 }
 
 void SimpleApi::ADD(bool withOverflow, bool withUnsignedOverflow)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     if( withUnsignedOverflow )
         d_imp->add( new Instruction(Instruction::i_add_ovf_un ) );
     else if( withOverflow )
@@ -402,20 +433,20 @@ void SimpleApi::ADD(bool withOverflow, bool withUnsignedOverflow)
 
 void SimpleApi::AND()
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_and) );
 }
 
 void SimpleApi::BEQ(quint32 label)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Q_ASSERT( label < d_imp->d_labels.size() );
     d_imp->add( new Instruction(Instruction::i_beq, d_imp->d_labels[label] ) );
 }
 
 void SimpleApi::BGE(quint32 label, bool withUnsigned)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Q_ASSERT( label < d_imp->d_labels.size() );
     if( withUnsigned )
         d_imp->add( new Instruction(Instruction::i_bge_un, d_imp->d_labels[label] ) );
@@ -425,7 +456,7 @@ void SimpleApi::BGE(quint32 label, bool withUnsigned)
 
 void SimpleApi::BGT(quint32 label, bool withUnsigned)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Q_ASSERT( label < d_imp->d_labels.size() );
     if( withUnsigned )
         d_imp->add( new Instruction(Instruction::i_bgt_un, d_imp->d_labels[label] ) );
@@ -435,7 +466,7 @@ void SimpleApi::BGT(quint32 label, bool withUnsigned)
 
 void SimpleApi::BLE(quint32 label, bool withUnsigned)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Q_ASSERT( label < d_imp->d_labels.size() );
     if( withUnsigned )
         d_imp->add( new Instruction(Instruction::i_ble_un, d_imp->d_labels[label] ) );
@@ -445,7 +476,7 @@ void SimpleApi::BLE(quint32 label, bool withUnsigned)
 
 void SimpleApi::BLT(quint32 label, bool withUnsigned)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Q_ASSERT( label < d_imp->d_labels.size() );
     if( withUnsigned )
         d_imp->add( new Instruction(Instruction::i_blt_un, d_imp->d_labels[label] ) );
@@ -455,7 +486,7 @@ void SimpleApi::BLT(quint32 label, bool withUnsigned)
 
 void SimpleApi::BNE(quint32 label)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Q_ASSERT( label < d_imp->d_labels.size() );
     d_imp->add( new Instruction(Instruction::i_bne_un, d_imp->d_labels[label] ) );
 }
@@ -469,42 +500,42 @@ void SimpleApi::BR(quint32 label)
 
 void SimpleApi::BREAK(quint32 label)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Q_ASSERT( label < d_imp->d_labels.size() );
     d_imp->add( new Instruction(Instruction::i_break, d_imp->d_labels[label] ) );
 }
 
 void SimpleApi::BRFALSE(quint32 label)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Q_ASSERT( label < d_imp->d_labels.size() );
     d_imp->add( new Instruction(Instruction::i_brfalse, d_imp->d_labels[label] ) );
 }
 
 void SimpleApi::BRNULL(quint32 label)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Q_ASSERT( label < d_imp->d_labels.size() );
     d_imp->add( new Instruction(Instruction::i_brnull, d_imp->d_labels[label] ) );
 }
 
 void SimpleApi::BRZERO(quint32 label)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Q_ASSERT( label < d_imp->d_labels.size() );
     d_imp->add( new Instruction(Instruction::i_brzero, d_imp->d_labels[label] ) );
 }
 
 void SimpleApi::BRTRUE(quint32 label)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Q_ASSERT( label < d_imp->d_labels.size() );
     d_imp->add( new Instruction(Instruction::i_brtrue, d_imp->d_labels[label] ) );
 }
 
 void SimpleApi::BRINST(quint32 label)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Q_ASSERT( label < d_imp->d_labels.size() );
     d_imp->add( new Instruction(Instruction::i_brinst, d_imp->d_labels[label] ) );
 }
@@ -519,7 +550,7 @@ void SimpleApi::CALL(const QByteArray& qualifier)
 
 void SimpleApi::CONV(SimpleApi::ToType t, bool withOverflow, bool withUnsignedOverflow)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Instruction::iop i = Instruction::i_unknown;
 
     switch( t )
@@ -619,7 +650,7 @@ void SimpleApi::CONV(SimpleApi::ToType t, bool withOverflow, bool withUnsignedOv
 
 void SimpleApi::DIV(bool withUnsigned)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     if( withUnsigned )
         d_imp->add( new Instruction(Instruction::i_div_un ) );
     else
@@ -628,28 +659,33 @@ void SimpleApi::DIV(bool withUnsigned)
 
 void SimpleApi::DUP()
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_dup ) );
 }
 
 void SimpleApi::LDARG(quint32 argNum)
 {
-    Q_ASSERT( d_imp != 0 );
-    // TODO: short versions
-    d_imp->add( new Instruction(Instruction::i_ldarg, new Operand( argNum, Operand::i32)));
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
+    if( argNum >= d_imp->d_meth->Signature()->ParamCount() )
+        throw PELibError(PELibError::IndexOutOfRange, "lddarg" );
+
+    d_imp->add( new Instruction(Instruction::i_ldarg,
+                                new Operand( d_imp->d_meth->Signature()->getParam(argNum))));
 }
 
 void SimpleApi::LDARGA(quint32 argNum)
 {
-    Q_ASSERT( d_imp != 0 );
-    // TODO: short versions
-    d_imp->add( new Instruction(Instruction::i_ldarga, new Operand( argNum, Operand::i32)));
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
+    if( argNum >= d_imp->d_meth->Signature()->ParamCount() )
+        throw PELibError(PELibError::IndexOutOfRange, "lddarga" );
+
+    d_imp->add( new Instruction(Instruction::i_ldarga,
+                                new Operand( d_imp->d_meth->Signature()->getParam(argNum))));
 }
 
 void SimpleApi::LDC(qint32 val)
 {
-    Q_ASSERT( d_imp != 0 );
-    // TODO: is this already optimized for shorts?
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_ldc_i4, new Operand( val, Operand::i32)));
 }
 
@@ -661,19 +697,19 @@ void SimpleApi::LDC(qint64 val)
 
 void SimpleApi::LDC(float val)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_ldc_r4, new Operand( val, Operand::r4)));
 }
 
 void SimpleApi::LDC(double val)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_ldc_r8, new Operand( val, Operand::r8)));
 }
 
 void SimpleApi::LDIND(SimpleApi::IndType t)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Instruction::iop i = Instruction::i_unknown;
     switch( t )
     {
@@ -719,27 +755,31 @@ void SimpleApi::LDIND(SimpleApi::IndType t)
 
 void SimpleApi::LDLOC(quint32 locNum)
 {
-    Q_ASSERT( d_imp != 0 );
-    // TODO: short versions
-    d_imp->add( new Instruction(Instruction::i_ldloc, new Operand( locNum, Operand::u32)));
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
+    if( locNum >= d_imp->d_meth->size() )
+        throw PELibError(PELibError::IndexOutOfRange, "ldloc" );
+    d_imp->add( new Instruction(Instruction::i_ldloc,
+                                new Operand( d_imp->d_meth->getLocal(locNum))));
 }
 
 void SimpleApi::LDLOCA(quint32 locNum)
 {
-    Q_ASSERT( d_imp != 0 );
-    // TODO: short versions
-    d_imp->add( new Instruction(Instruction::i_ldloca, new Operand( locNum, Operand::u32)));
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
+    if( locNum >= d_imp->d_meth->size() )
+        throw PELibError(PELibError::IndexOutOfRange, "ldloca" );
+    d_imp->add( new Instruction(Instruction::i_ldloca,
+                                new Operand( d_imp->d_meth->getLocal(locNum))));
 }
 
 void SimpleApi::LDNULL()
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_ldnull) );
 }
 
 void SimpleApi::MUL(bool withOverflow, bool withUnsignedOverflow)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     if( withUnsignedOverflow )
         d_imp->add( new Instruction(Instruction::i_mul_ovf_un ) );
     else if( withOverflow )
@@ -750,37 +790,37 @@ void SimpleApi::MUL(bool withOverflow, bool withUnsignedOverflow)
 
 void SimpleApi::NEG()
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_neg) );
 }
 
 void SimpleApi::NOP()
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_nop) );
 }
 
 void SimpleApi::NOT()
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_not) );
 }
 
 void SimpleApi::OR()
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_or) );
 }
 
 void SimpleApi::POP()
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_pop) );
 }
 
 void SimpleApi::REM(bool withUnsigned)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     if( withUnsigned )
         d_imp->add( new Instruction(Instruction::i_rem_un ) );
     else
@@ -789,19 +829,19 @@ void SimpleApi::REM(bool withUnsigned)
 
 void SimpleApi::RET()
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_ret) );
 }
 
 void SimpleApi::SHL()
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_shl) );
 }
 
 void SimpleApi::SHR(bool withUnsigned)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     if( withUnsigned )
         d_imp->add( new Instruction(Instruction::i_shr_un ) );
     else
@@ -810,14 +850,17 @@ void SimpleApi::SHR(bool withUnsigned)
 
 void SimpleApi::STARG(quint32 argNum)
 {
-    Q_ASSERT( d_imp != 0 );
-    // TODO: short versions
-    d_imp->add( new Instruction(Instruction::i_starg, new Operand( argNum, Operand::i32)));
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
+    if( argNum >= d_imp->d_meth->Signature()->ParamCount() )
+        throw PELibError(PELibError::IndexOutOfRange, "stdarg" );
+
+    d_imp->add( new Instruction(Instruction::i_starg,
+                                new Operand( d_imp->d_meth->Signature()->getParam(argNum))));
 }
 
 void SimpleApi::STIND(SimpleApi::IndType t)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Instruction::iop i = Instruction::i_unknown;
     switch( t )
     {
@@ -853,14 +896,16 @@ void SimpleApi::STIND(SimpleApi::IndType t)
 
 void SimpleApi::STLOC(quint32 locNum)
 {
-    Q_ASSERT( d_imp != 0 );
-    // TODO: short versions
-    d_imp->add( new Instruction(Instruction::i_stloc, new Operand( locNum, Operand::u32)));
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
+    if( locNum >= d_imp->d_meth->size() )
+        throw PELibError(PELibError::IndexOutOfRange, "stloc" );
+    d_imp->add( new Instruction(Instruction::i_stloc,
+                                new Operand( d_imp->d_meth->getLocal(locNum))));
 }
 
 void SimpleApi::SUB(bool withOverflow, bool withUnsignedOverflow)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     if( withUnsignedOverflow )
         d_imp->add( new Instruction(Instruction::i_sub_ovf_un ) );
     else if( withOverflow )
@@ -871,13 +916,13 @@ void SimpleApi::SUB(bool withOverflow, bool withUnsignedOverflow)
 
 void SimpleApi::XOR()
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_xor) );
 }
 
 void SimpleApi::CALLVIRT(const QByteArray& qualifier)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Resource* res = d_imp->findName(qualifier, PELib::s_method);
     Method* meth = static_cast<Method*>(res);
     d_imp->add( new Instruction(Instruction::i_callvirt, new Operand( new MethodName( meth->Signature() ))));
@@ -885,31 +930,31 @@ void SimpleApi::CALLVIRT(const QByteArray& qualifier)
 
 void SimpleApi::CASTCLASS(const QByteArray& qualifier)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_castclass, new Operand( new Value(d_imp->findType(qualifier)))));
 }
 
 void SimpleApi::INITOBJ(const QByteArray& qualifier)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_initobj, new Operand( new Value(d_imp->findType(qualifier)))));
 }
 
 void SimpleApi::ISINST(const QByteArray& qualifier)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_isinst, new Operand( new Value(d_imp->findType(qualifier)))));
 }
 
 void SimpleApi::LDELEM(const QByteArray& qualifier)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_ldelem, new Operand( new Value(d_imp->findType(qualifier)))));
 }
 
 void SimpleApi::LDELEM(SimpleApi::IndType t)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Instruction::iop i = Instruction::i_unknown;
     switch( t )
     {
@@ -955,13 +1000,13 @@ void SimpleApi::LDELEM(SimpleApi::IndType t)
 
 void SimpleApi::LDELEMA(const QByteArray& qualifier)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_ldelema, new Operand( new Value(d_imp->findType(qualifier)))));
 }
 
 void SimpleApi::LDFLD(const QByteArray& qualifier)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Resource* res = d_imp->findName(qualifier, PELib::s_field);
     d_imp->add( new Instruction(Instruction::i_ldfld,
                                 new Operand( new FieldName(static_cast<Field*>(res)))));
@@ -969,7 +1014,7 @@ void SimpleApi::LDFLD(const QByteArray& qualifier)
 
 void SimpleApi::LDFLDA(const QByteArray& qualifier)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Resource* res = d_imp->findName(qualifier, PELib::s_field);
     d_imp->add( new Instruction(Instruction::i_ldflda,
                                 new Operand( new FieldName(static_cast<Field*>(res)))));
@@ -977,19 +1022,19 @@ void SimpleApi::LDFLDA(const QByteArray& qualifier)
 
 void SimpleApi::LDLEN()
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_ldlen) );
 }
 
 void SimpleApi::LDOBJ(const QByteArray& qualifier)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_ldobj, new Operand( new Value(d_imp->findType(qualifier)))));
 }
 
 void SimpleApi::LDSFLD(const QByteArray& qualifier)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Resource* res = d_imp->findName(qualifier, PELib::s_field);
     d_imp->add( new Instruction(Instruction::i_ldsfld,
                                 new Operand( new FieldName(static_cast<Field*>(res)))));
@@ -997,7 +1042,7 @@ void SimpleApi::LDSFLD(const QByteArray& qualifier)
 
 void SimpleApi::LDSFLDA(const QByteArray& qualifier)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Resource* res = d_imp->findName(qualifier, PELib::s_field);
     d_imp->add( new Instruction(Instruction::i_ldsflda,
                                 new Operand( new FieldName(static_cast<Field*>(res)))));
@@ -1005,26 +1050,26 @@ void SimpleApi::LDSFLDA(const QByteArray& qualifier)
 
 void SimpleApi::LDSTR(const QByteArray& string)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_ldstr, new Operand( string.constData(), true ) ) );
 }
 
 void SimpleApi::LDVIRTFTN(const QByteArray& qualifier)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Method* meth = static_cast<Method*>(d_imp->findName(qualifier, PELib::s_method));
     d_imp->add( new Instruction(Instruction::i_ldvirtftn, new Operand( new MethodName( meth->Signature() ))));
 }
 
 void SimpleApi::NEWARR(const QByteArray& qualifier)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_newarr, new Operand( new Value(d_imp->findType(qualifier)))));
 }
 
 void SimpleApi::NEWOBJ(const QByteArray& qualifier)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Method* meth = static_cast<Method*>(d_imp->findName(qualifier, PELib::s_method));
     if( meth->Signature()->Name() != ".ctor" )
         throw PELibError( PELibError::NotSupported, qualifier.constData() );
@@ -1033,13 +1078,13 @@ void SimpleApi::NEWOBJ(const QByteArray& qualifier)
 
 void SimpleApi::STELEM(const QByteArray& qualifier)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     d_imp->add( new Instruction(Instruction::i_stelem, new Operand( new Value(d_imp->findType(qualifier)))));
 }
 
 void SimpleApi::STELEM(SimpleApi::IndType t)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Instruction::iop i = Instruction::i_unknown;
     switch( t )
     {
@@ -1075,7 +1120,7 @@ void SimpleApi::STELEM(SimpleApi::IndType t)
 
 void SimpleApi::STFLD(const QByteArray& qualifier)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Resource* res = d_imp->findName(qualifier, PELib::s_field);
     d_imp->add( new Instruction(Instruction::i_stfld,
                                 new Operand( new FieldName(static_cast<Field*>(res)))));
@@ -1083,7 +1128,7 @@ void SimpleApi::STFLD(const QByteArray& qualifier)
 
 void SimpleApi::STSFLD(const QByteArray& qualifier)
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     Resource* res = d_imp->findName(qualifier, PELib::s_field);
     d_imp->add( new Instruction(Instruction::i_stsfld,
                                 new Operand( new FieldName(static_cast<Field*>(res)))));
@@ -1091,7 +1136,7 @@ void SimpleApi::STSFLD(const QByteArray& qualifier)
 
 quint32 SimpleApi::newLabel()
 {
-    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
     const int id = d_imp->d_labels.size();
     Operand* label = new Operand( QByteArray::number(id).constData() ); // seems only to work with string labels
     d_imp->d_labels.append( label );
