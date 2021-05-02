@@ -78,7 +78,12 @@ namespace DotNetPELib
             ///** Seh section not correctly ended
             InvalidSEHEpilogue,
             ///** cannot run more than one instance of PELib at a time
-            AlreadyRunning
+            AlreadyRunning,
+            ///** symbol resolution
+            NotFound,
+            Ambiguous,
+            Syntax,
+            NotSupported,
         };
         PELibError(ErrorList err, const std::string &Name = "") : errnum(err), std::runtime_error(std::string(errorNames[err]) + " " + Name)
         {

@@ -42,5 +42,10 @@ const char* PELibError::errorNames[] = {
     "Orphaned SEH Tag",
     "Invalid SEH Filter",
     "Invalid epilogue of SEH section",
+    "PELib already running",
+    "Name not found",
+    "Name is ambiguous",
+    "Syntax error",
+    "Not supported"
 };
 }

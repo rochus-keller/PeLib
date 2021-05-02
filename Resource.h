@@ -117,7 +117,7 @@ namespace DotNetPELib
 
     private:
         friend class PELib;
-        static std::deque<Resource*> s_all; // TODO replace with RefCounted
+        static std::deque<Resource*> s_all;
     };
 }
 

@@ -231,7 +231,7 @@ void PEWriter::AddMethod(PEMethod* method)
     if (method->flags_ & PEMethod::EntryPoint)
     {
         if (entryPoint_)
-            throw new PELibError(PELibError::MultipleEntryPoints);
+            throw PELibError(PELibError::MultipleEntryPoints);
         entryPoint_ = method->methodDef_ | (tMethodDef << 24);
     }
     methods_.push_back(method);
@@ -691,7 +691,7 @@ bool PEWriter::WriteFile(PELib& peLib, std::iostream& out)
 {
     outputFile_ = &out;
     if (!entryPoint_ && !DLL_)
-        throw new PELibError(PELibError::MissingEntryPoint);
+        throw PELibError(PELibError::MissingEntryPoint);
     CalculateObjects(peLib);
     bool rv = WriteMZData(peLib) && WritePEHeader(peLib) && WritePEObjects(peLib) && WriteIAT(peLib) && WriteCoreHeader(peLib) &&
               WriteStaticData(peLib) && WriteMethods(peLib) && WriteMetadataHeaders(peLib) && WriteTables(peLib) &&

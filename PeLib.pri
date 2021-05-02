@@ -40,7 +40,8 @@ HEADERS += \
     Type.h \
     Callback.h \
     Resource.h \
-    $$PWD/PublicApi.h
+    $$PWD/PublicApi.h \
+    $$PWD/SimpleApi.h
 
 SOURCES += \
     AssemblyDef.cpp \
@@ -70,4 +71,5 @@ SOURCES += \
     sha1.cpp \
     Type.cpp \
     Value.cpp \
-    Resource.cpp
+    Resource.cpp \
+    $$PWD/SimpleApi.cpp

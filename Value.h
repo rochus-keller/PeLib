@@ -43,6 +43,7 @@ namespace DotNetPELib
     {
     public:
         Value(const std::string& Name, Type *tp) : name_(Name), type_(tp) { }
+        Value(Type *tp) : type_(tp) { }
 
         ///** get/set type of value
         Type *GetType() const { return type_; }

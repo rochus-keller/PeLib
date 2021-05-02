@@ -2,7 +2,7 @@ This is a modified version of https://github.com/LADSoft/DotNetPELib, commit [b1
 
 See ORIG_README.md and ChangeLog.txt for more information.
 
-The API has changed a bit compared to the original library. The Allocator class is no longer present. Instances are still automatically deleted when PELib is deleted or goes out of scope.
+The API has changed a bit compared to the original library. The Allocator class is no longer present. Instances are still automatically deleted when PELib is deleted or goes out of scope. There is a new simpler API which supports a subset of all CLI features (subject to evolutionary enhancement).
 
 The code is known to work on Linux and Windows. The generated assemblies work with both .NET Core and Mono.
 
