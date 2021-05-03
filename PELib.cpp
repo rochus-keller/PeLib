@@ -224,6 +224,11 @@ void PELib::SplitPath(std::vector<std::string>& split, std::string path)
 }
 PELib::eFindType PELib::Find(std::string path, Resource** result, std::deque<Type*>* generics, AssemblyDef *assembly)
 {
+    for( int i = 0; i < path.size(); i++ )
+    {
+        if( path[i] == '/' )
+            path[i] = '.';
+    }
     if (path.size() && path[0] == '[')
     {
         size_t npos = path.find(']');

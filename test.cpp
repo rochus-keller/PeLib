@@ -144,12 +144,52 @@ void test4()
     }
 }
 
+void test5()
+{
+    SimpleApi api;
+
+    try
+    {
+        api.beginModule("Test5");
+        api.addModuleReference("mscorlib");
+
+        api.beginClass("Outer", true);
+
+        api.beginClass("Inner",true);
+
+        api.beginMethod("DoIt", true, true, false );
+        api.addArgument("string");
+        api.LDARG(0);
+        api.CALL("System.Console.WriteLine(string)");
+        api.RET();
+        api.endMethod();
+
+        api.endClass();
+
+        api.endClass();
+
+        api.beginMethod( "Main", true, true, true );
+        api.LDSTR("This is a string");
+        api.CALL("Outer/Inner::DoIt");
+        api.RET();
+        api.endMethod();
+
+        api.writeByteCode("test5.exe");
+        api.writeAssembler("test5.il");
+        api.endModule();
+    }
+    catch( const std::runtime_error& e )
+    {
+        qCritical() << e.what();
+    }
+}
+
 int main()
 {
     test1();
     test2();
     test3();
     test4();
-
+    test5();
     return 0;
 }

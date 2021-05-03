@@ -167,8 +167,11 @@ public:
             d_nsStack.back()->Add(cls);
             d_classStack.push_back(cls);
         }else
+        {
             // this is a top class in the assembly root
             WorkingAssembly()->Add(cls);
+            d_classStack.push_back(cls);
+        }
     }
 };
 
