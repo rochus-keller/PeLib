@@ -184,12 +184,79 @@ void test5()
     }
 }
 
+void test6()
+{
+    SimpleApi api;
+
+    try
+    {
+        api.beginModule("Test6");
+        api.addModuleReference("mscorlib");
+
+        api.addField("array1", "int8[]", true, true );
+
+        api.beginStruct("MyStruct");
+        api.addField("alpha", "string");
+        api.addField("beta", "int32" );
+        api.addField("gamma", "uint16[]");
+        api.endStruct();
+
+        api.addField("array2", "MyStruct[]",false, true);
+
+        api.beginMethod( "Main", true, true, true );
+        api.addLocal("MyStruct");
+
+        api.LDC(10);
+        api.NEWARR("int8[]");
+        api.STSFLD("array1");
+        api.LDC(3);
+        api.NEWARR("MyStruct[]");
+        api.STSFLD("array2");
+
+        api.addField("array3", "int16[,]", false, false );
+        api.LDTOKEN("System.Int16");
+        api.CALL("System.Type::GetTypeFromHandle(System.RuntimeTypeHandle)");
+        api.LDC(3);
+        api.LDC(4);
+        api.CALL("System.Array::CreateInstance(System.Type, int32, int32)");
+        api.STSFLD("array3");
+
+        api.LDSFLD("array3");
+        api.LDC(123);
+        api.BOX("System.Int16");
+        api.LDC(1);
+        api.LDC(2);
+        api.CALLVIRT("System.Array::SetValue(object, int32, int32)");
+
+        api.LDSFLD("array3");
+        api.LDC(1);
+        api.LDC(2);
+        api.CALLVIRT("System.Array::GetValue(int32,int32)");
+        api.UNBOX("System.Int16");
+        api.CALL("System.Console.WriteLine(int32)");
+
+        api.RET();
+        api.endMethod();
+
+        api.writeByteCode("test6.exe");
+        api.writeAssembler("test6.il");
+        api.endModule();
+    }
+    catch( const std::runtime_error& e )
+    {
+        qCritical() << e.what();
+    }
+}
+
 int main()
 {
+    /*
     test1();
     test2();
     test3();
     test4();
     test5();
+    */
+    test6();
     return 0;
 }

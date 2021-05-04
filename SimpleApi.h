@@ -34,10 +34,12 @@ namespace DotNetPELib
         // all strings are utf-8
 
         // qualifier: composite name,
-        // optionally with [assembly], namespace, etc.
+        // optionally with [assembly] prefix, namespace, etc.
         // optionally with argument types (t1,t2,..), where tn are qualifiers or native type names
         // optionally with '&' postfix (applicability is not checked by PeLib!)
+        // optionally with '[]' (multidim not yet supported) postfix; remember that arrays are objects, not values
         // both valid: Namespace.Class and Namespace::Class
+        // both valid: OuterClass/InnerClass and OuterClass.InnerClass
         // identifier start with alpha, #, $, @ or _ and continue with alphanumeric, ?, $, @, _ or `
 
 
@@ -52,16 +54,16 @@ namespace DotNetPELib
         void endNamespace(); // namespaces can be nested, only apply to classes, structs and enums
 
         void beginMethod(const QByteArray& methodName, // can be on top level or in a class/struct; cannot be in a method
-                         bool isPublic,
-                         bool isStatic,
-                         bool isPrimary );
+                         bool isPublic = true,
+                         bool isStatic = false,
+                         bool isPrimary = false );
         void endMethod();
 
-        void beginClass(const QByteArray& className, bool isPublic,
+        void beginClass(const QByteArray& className, bool isPublic = true,
                          const QByteArray& superClassQualifier = QByteArray() );
         void endClass(); // classes can be nested
 
-        void beginStruct( const QByteArray& structName, bool isPublic );
+        void beginStruct( const QByteArray& structName, bool isPublic = true );
         void endStruct(); // structs can be nested
 
         typedef QPair<QByteArray,qint32> EnumItem; // -1 undefined
@@ -70,8 +72,8 @@ namespace DotNetPELib
 
         void addField( const QByteArray& fieldName, // on top level or in class
                        const QByteArray& typeQualifier,
-                       bool isPublic,
-                       bool isStatic );
+                       bool isPublic = true,
+                       bool isStatic = false );
 
         quint32 addLocal( const QByteArray& typeQualifier, QByteArray name = QByteArray() );
         quint32 addArgument(const QByteArray& typeQualifier, QByteArray name = QByteArray() );
@@ -139,7 +141,7 @@ namespace DotNetPELib
         void XOR();
 
         // Object model instructions:
-        // box
+        void BOX(const QByteArray& qualifier);
         void CALLVIRT(const QByteArray& qualifier);
         void CASTCLASS(const QByteArray& qualifier);
         // copobj
@@ -155,7 +157,7 @@ namespace DotNetPELib
         void LDSFLD(const QByteArray& qualifier);
         void LDSFLDA(const QByteArray& qualifier);
         void LDSTR( const QByteArray& string );
-        // ldtoken
+        void LDTOKEN( const QByteArray& qualifier );
         void LDVIRTFTN(const QByteArray& qualifier);
         // mkrefany
         void NEWARR(const QByteArray& qualifier);
@@ -169,7 +171,7 @@ namespace DotNetPELib
         // stobj
         void STSFLD(const QByteArray& qualifier);
         // throw
-        // unbox
+        void UNBOX(const QByteArray& qualifier);
 
     private:
         class Imp;

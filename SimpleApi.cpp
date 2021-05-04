@@ -72,13 +72,19 @@ public:
             std::vector<Type> args1;
             for( int i = 0; i < tmp.size(); i++ )
             {
-                // TODO: array support
                 QByteArray arg = tmp[i].simplified();
                 if( arg.endsWith('&') )
                 {
                     // Byref is not relevant for matching, just remove it
                     arg.chop(1);
                     arg = arg.trimmed();
+                }
+                int rank = 0;
+                if( arg.endsWith("[]") )
+                {
+                    arg.chop(2);
+                    arg = arg.trimmed();
+                    rank++;
                 }
                 QHash<QByteArray,Type>::const_iterator j = d_basicTypes.find(arg);
                 if( j != d_basicTypes.end() )
@@ -92,6 +98,7 @@ public:
                     else
                         throw PELibError(PELibError::NotSupported, path.constData() );
                 }
+                args1[args1.size()-1].ArrayLevel(rank);
             }
             std::vector<Type*> args2(args1.size());
             for( int i = 0; i < args1.size(); i++ )
@@ -119,24 +126,36 @@ public:
 
     Type* findType( QByteArray path )
     {
-        // TODO: array support, method pointers
+        // TODO: method pointer support
         path = path.simplified();
-        bool byref;
+        bool byref = false;
         if( path.endsWith('&') )
         {
             path.chop(1);
             path = path.trimmed();
             byref = true;
         }
+        int arrayRank = 0;
+        if( path.endsWith(']') )
+        {
+            // we only support a single "[]" for the moment, optionally with included ','
+            // no '...', no bounds
+            const int lbrack = path.lastIndexOf('[');
+            if( lbrack == -1 )
+                throw PELibError(PELibError::Syntax, path.constData() );
+            arrayRank = 1 + path.mid(lbrack).count(',');
+            path = path.left(lbrack).trimmed();
+        }
         QHash<QByteArray,Type>::iterator j = d_basicTypes.find(path);
         if( j != d_basicTypes.end() )
         {
-            if( !byref )
+            if( !byref && arrayRank == 0 )
                 return &j.value();
             else
             {
                 Type* t = new Type( j.value().GetBasicType() );
-                t->ByRef(true);
+                t->ByRef(byref);
+                t->ArrayLevel(arrayRank);
                 return t;
             }
         }else
@@ -147,9 +166,10 @@ public:
             {
                 Type* t = new Type(static_cast<Class*>(res));
                 t->ByRef(byref);
+                t->ArrayLevel(arrayRank);
                 return t;
             }else
-                throw PELibError(PELibError::NotSupported, path.constData() );
+                throw PELibError(PELibError::NotFound, path.constData() );
         }
         return 0;
     }
@@ -930,6 +950,12 @@ void SimpleApi::XOR()
     d_imp->add( new Instruction(Instruction::i_xor) );
 }
 
+void SimpleApi::BOX(const QByteArray& qualifier)
+{
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
+    d_imp->add( new Instruction(Instruction::i_box, new Operand( new Value(d_imp->findType(qualifier)))));
+}
+
 void SimpleApi::CALLVIRT(const QByteArray& qualifier)
 {
     Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
@@ -1064,6 +1090,35 @@ void SimpleApi::LDSTR(const QByteArray& string)
     d_imp->add( new Instruction(Instruction::i_ldstr, new Operand( string.constData(), true ) ) );
 }
 
+void SimpleApi::LDTOKEN(const QByteArray& qualifier)
+{
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
+    Imp::Found res = d_imp->findName(qualifier);
+    if( res.second == PELib::s_ambiguous )
+        throw PELibError(PELibError::Ambiguous, qualifier.constData());
+    if( res.second == PELib::s_notFound )
+        throw PELibError(PELibError::NotFound, qualifier.constData());
+    Value* v;
+    switch( res.second )
+    {
+    case PELib::s_class:
+    case PELib::s_enum:
+        v = new Value( new Type( static_cast<Class*>(res.first) ) );
+        break;
+    case PELib::s_field:
+        v = new FieldName(static_cast<Field*>(res.first));
+        break;
+    case PELib::s_property:
+    case PELib::s_method:
+        v = new MethodName(static_cast<Method*>(res.first)->Signature());
+        break;
+    default:
+        throw PELibError(PELibError::NotSupported, qualifier.constData());
+    }
+
+    d_imp->add( new Instruction(Instruction::i_ldtoken, new Operand( v )));
+}
+
 void SimpleApi::LDVIRTFTN(const QByteArray& qualifier)
 {
     Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
@@ -1142,6 +1197,12 @@ void SimpleApi::STSFLD(const QByteArray& qualifier)
     Resource* res = d_imp->findName(qualifier, PELib::s_field);
     d_imp->add( new Instruction(Instruction::i_stsfld,
                                 new Operand( new FieldName(static_cast<Field*>(res)))));
+}
+
+void SimpleApi::UNBOX(const QByteArray& qualifier)
+{
+    Q_ASSERT( d_imp != 0 && d_imp->d_meth != 0 );
+    d_imp->add( new Instruction(Instruction::i_unbox_any, new Operand( new Value(d_imp->findType(qualifier)))));
 }
 
 quint32 SimpleApi::newLabel()
