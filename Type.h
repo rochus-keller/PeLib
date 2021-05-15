@@ -42,20 +42,20 @@ namespace DotNetPELib
     public:
         enum BasicType {
             ///** type is a reference to a class
-            cls,
+            ClassRef,
             ///** type is a reference to a method signature
-            method,
+            MethodRef,
             ///** type is a generic variable
-            var,
+            TypeVar,
             ///** type is a generic method param
-            mvar,
+            MethodParam,
             /* below this is various CIL types*/
             Void, Bool, Char, i8, u8, i16, u16, i32, u32, i64, u64, inative, unative, r32, r64, object, string
         };
 
         Type(BasicType Tp, int PointerLevel = 0);
-        Type(DataContainer *clsref) : tp_(cls), pointerLevel_(0), arrayLevel_(0), byRef_(false), typeRef_(clsref), methodRef_(nullptr), peIndex_(0), pinned_(false), showType_(false), varnum_(0){}
-        Type(MethodSignature *methodref) : tp_(method), pointerLevel_(0), arrayLevel_(0), byRef_(false), typeRef_(nullptr),
+        Type(DataContainer *clsref) : tp_(ClassRef), pointerLevel_(0), arrayLevel_(0), byRef_(false), typeRef_(clsref), methodRef_(nullptr), peIndex_(0), pinned_(false), showType_(false), varnum_(0){}
+        Type(MethodSignature *methodref) : tp_(MethodRef), pointerLevel_(0), arrayLevel_(0), byRef_(false), typeRef_(nullptr),
             methodRef_(methodref), peIndex_(0), pinned_(false), showType_(false), varnum_(0){}
 
         ///** Get/set the type of the Type object

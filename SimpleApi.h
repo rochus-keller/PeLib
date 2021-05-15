@@ -44,7 +44,7 @@ namespace DotNetPELib
 
 
         void beginModule( const QByteArray& moduleName, ModuleKind = Library );
-        void writeByteCode( const QByteArray& filePath ); // dll or exe doesn't actually matter
+        void writeByteCode(const QByteArray& filePath );
         void writeAssembler( const QByteArray& filePath );
         void endModule();
 
@@ -61,6 +61,8 @@ namespace DotNetPELib
 
         void beginClass(const QByteArray& className, bool isPublic = true,
                          const QByteArray& superClassQualifier = QByteArray() );
+        void openClass(const QByteArray& className);
+        void setSuperClass( const QByteArray& superClassQualifier );
         void endClass(); // classes can be nested
 
         void beginStruct( const QByteArray& structName, bool isPublic = true );

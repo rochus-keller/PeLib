@@ -102,7 +102,7 @@ bool Method::ILSrcDump(PELib& peLib) const
             {
 
                 peLib.Out() << "\t\t[" << (*it)->Index() << "]\t";
-                if ((*it)->GetType()->GetBasicType() == Type::cls)
+                if ((*it)->GetType()->GetBasicType() == Type::ClassRef)
                 {
                     if ((*it)->GetType()->GetClass()->Flags().Flags() & Qualifiers::Value)
                         peLib.Out() << "valuetype ";
@@ -235,7 +235,7 @@ bool Method::PEDump(PELib& peLib)
         size_t methodSignature = 0;
         Byte* sig = nullptr;
         TableEntryBase* table;
-        if (prototype_->ReturnType() && prototype_->ReturnType()->GetBasicType() == Type::cls)
+        if (prototype_->ReturnType() && prototype_->ReturnType()->GetBasicType() == Type::ClassRef)
         {
             if (prototype_->ReturnType()->GetClass()->InAssemblyRef())
             {
@@ -249,7 +249,7 @@ bool Method::PEDump(PELib& peLib)
             {
                 auto param = *it;
                 Type* tp = param->GetType();
-                if (tp->GetBasicType() == Type::cls)
+                if (tp->GetBasicType() == Type::ClassRef)
                 {
                     if (!tp->PEIndex())
                     {
@@ -265,7 +265,7 @@ bool Method::PEDump(PELib& peLib)
             for (auto local : varList_)
             {
                 Type* tp = local->GetType();
-                if (tp->GetBasicType() == Type::cls)
+                if (tp->GetBasicType() == Type::ClassRef)
                 {
                     if (!tp->PEIndex())
                     {

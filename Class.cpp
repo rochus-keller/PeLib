@@ -106,7 +106,7 @@ int Class::TransferFlags() const
 }
 bool Class::PEDump(PELib& peLib)
 {
-    if (generic_.size() && generic_.front()->GetBasicType() != Type::var)
+    if (generic_.size() && generic_.front()->GetBasicType() != Type::TypeVar)
     {
         if (!peIndex_)
         {
@@ -116,7 +116,7 @@ bool Class::PEDump(PELib& peLib)
             {
                 for (auto g : generic_)
                 {
-                    if (g->GetBasicType() == Type::cls && g->PEIndex() == 0)
+                    if (g->GetBasicType() == Type::ClassRef && g->PEIndex() == 0)
                     {
                         size_t val;
                         g->Render(peLib, (Byte*)&val);
@@ -483,7 +483,7 @@ std::string Class::AdornGenerics(PELib& peLib, bool names) const
         peLib.Out() << "<";
         for (auto&& type : generic_)
         {
-            if (names && type->GetBasicType() == Type::var)
+            if (names && type->GetBasicType() == Type::TypeVar)
             {
                 peLib.Out() << (char)(type->VarNum() / 26 + 'A');
                 peLib.Out() << (char)(type->VarNum() % 26 + 'A');

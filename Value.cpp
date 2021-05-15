@@ -167,7 +167,7 @@ size_t Param::Render(PELib& peLib, int opcode, int operandType, Byte* result)
 }
 bool FieldName::ILSrcDump(PELib& peLib) const
 {
-    if (field_->FieldType()->GetBasicType() == Type::cls)
+    if (field_->FieldType()->GetBasicType() == Type::ClassRef)
     {
         if (field_->FieldType()->GetClass()->Flags().Flags() & Qualifiers::Value)
             peLib.Out() << "valuetype ";

@@ -25,9 +25,9 @@ public:
     QList<Operand*> d_labels;
     QList<Namespace*> d_nsStack;
     QHash<QByteArray,Type> d_basicTypes;
-    bool d_hasCode;
+    bool d_hasCode, d_hasPrimary;
 
-    Imp( const QString& name ):PELib( name.toUtf8().constData() ),d_meth(0),d_hasCode(false)
+    Imp( const QString& name ):PELib( name.toUtf8().constData() ),d_meth(0),d_hasCode(false),d_hasPrimary(false)
     {
         d_basicTypes.insert("bool",Type(Type::Bool));
         d_basicTypes.insert("float32",Type(Type::r32));
@@ -124,6 +124,44 @@ public:
         return res.first;
     }
 
+    Resource* findLocalName( const QByteArray& name, PELib::eFindType what )
+    {
+        Resource* res = 0;
+        if( !d_classStack.isEmpty() )
+            res = d_classStack.back()->FindContainer( name.constData() );
+        else if( !d_nsStack.isEmpty() )
+            res = d_nsStack.back()->FindContainer( name.constData() );
+        else
+            res = WorkingAssembly()->FindContainer( name.constData() );
+        switch( what )
+        {
+        case s_namespace:
+            res = dynamic_cast<Namespace*>(res);
+            break;
+        case s_enum:
+            res = dynamic_cast<Enum*>(res);
+            break;
+        case s_class:
+            res = dynamic_cast<Class*>(res);
+            break;
+        case s_field:
+            res = dynamic_cast<Field*>(res);
+            break;
+        case s_property:
+            res = dynamic_cast<Property*>(res);
+            break;
+        case s_method:
+            res = dynamic_cast<Method*>(res);
+            break;
+        default:
+            throw PELibError(PELibError::NotSupported, name.constData());
+        }
+        if( res == 0 )
+            throw PELibError(PELibError::NotFound, name.constData());
+        else
+            return res;
+    }
+
     Type* findType( QByteArray path )
     {
         // TODO: method pointer support
@@ -169,27 +207,33 @@ public:
                 t->ArrayLevel(arrayRank);
                 return t;
             }else
+            {
+                qCritical() << "not found" << path;
                 throw PELibError(PELibError::NotFound, path.constData() );
+            }
         }
         return 0;
     }
 
-    void push( Class* cls )
+    void push( Class* cls, bool add = true )
     {
         if( !d_classStack.isEmpty() )
         {
             // this is a nested class
-            d_classStack.back()->Add(cls);
+            if( add )
+                d_classStack.back()->Add(cls);
             d_classStack.push_back(cls);
         }else if( !d_nsStack.isEmpty() )
         {
             // this is a top class in a namespace
-            d_nsStack.back()->Add(cls);
+            if( add )
+                d_nsStack.back()->Add(cls);
             d_classStack.push_back(cls);
         }else
         {
             // this is a top class in the assembly root
-            WorkingAssembly()->Add(cls);
+            if( add )
+                WorkingAssembly()->Add(cls);
             d_classStack.push_back(cls);
         }
     }
@@ -216,7 +260,12 @@ void SimpleApi::beginModule(const QByteArray& moduleName, SimpleApi::ModuleKind 
 void SimpleApi::writeByteCode(const QByteArray& filePath)
 {
     Q_ASSERT( d_imp != 0 );
-    d_imp->DumpOutputFile(filePath.constData(), PELib::peexe, d_imp->d_kind == GuiApp );
+    if( d_imp->MSCorLibAssembly() == 0 )
+        throw PELibError(PELibError::NotFound, "mscorlib.dll");
+    if( d_imp->d_hasPrimary && d_imp->d_kind == Library )
+        qWarning() << "library module with a primary method:" << filePath;
+    d_imp->DumpOutputFile(filePath.constData(), d_imp->d_kind == Library ? PELib::pedll : PELib::peexe,
+                          d_imp->d_kind == GuiApp );
 }
 
 void SimpleApi::writeAssembler(const QByteArray& filePath)
@@ -275,6 +324,8 @@ void SimpleApi::beginMethod(const QByteArray& methodName, bool isPublic, bool is
         q |= Qualifiers::SpecialName | Qualifiers::RTSpecialName;
     // TODO: Qualifiers::HideBySig
     d_imp->d_meth = new Method( sig, q, isPrimary);
+    if( isPrimary )
+        d_imp->d_hasPrimary = true;
 
     if( d_imp->d_classStack.isEmpty() )
         d_imp->WorkingAssembly()->Add(d_imp->d_meth); // namespaces only apply to classes!
@@ -316,6 +367,24 @@ void SimpleApi::beginClass(const QByteArray& className, bool isPublic, const QBy
     }
 
     d_imp->push(cls);
+}
+
+void SimpleApi::openClass(const QByteArray& className)
+{
+    Q_ASSERT( d_imp );
+    Resource* res = d_imp->findLocalName(className.constData(), PELib::s_class);
+    d_imp->push((Class*)res, false);
+}
+
+void SimpleApi::setSuperClass(const QByteArray& superClassQualifier)
+{
+    Q_ASSERT( d_imp && !d_imp->d_classStack.isEmpty() );
+    if( !superClassQualifier.isEmpty() )
+    {
+        Resource* res = d_imp->findName(superClassQualifier.constData(), PELib::s_class);
+        d_imp->d_classStack.back()->Extends( (Class*)res );
+    }else
+        d_imp->d_classStack.back()->Extends( 0 );
 }
 
 void SimpleApi::endClass()

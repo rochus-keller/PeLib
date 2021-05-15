@@ -82,7 +82,7 @@ bool Field::ILSrcDump(PELib& peLib) const
         peLib.Out() << " [" << explicitOffset_ << "]";
     flags_.ILSrcDumpBeforeFlags(peLib);
     flags_.ILSrcDumpAfterFlags(peLib);
-    if (FieldType()->GetBasicType() == Type::cls)
+    if (FieldType()->GetBasicType() == Type::ClassRef)
     {
         if (FieldType()->GetClass()->Flags().Flags() & Qualifiers::Value)
         {
@@ -280,7 +280,7 @@ Field* Field::ObjIn(PELib& peLib, bool definition)
 bool Field::PEDump(PELib& peLib)
 {
     size_t sz;
-    if (type_->GetBasicType() == Type::cls)
+    if (type_->GetBasicType() == Type::ClassRef)
     {
         if (type_->GetClass()->InAssemblyRef())
             type_->GetClass()->PEDump(peLib);

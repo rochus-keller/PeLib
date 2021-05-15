@@ -91,15 +91,15 @@ size_t SignatureGenerator::EmbedType(int* buf, int offset, Type* tp)
         case Type::object:
             buf[offset + rv++] = ELEMENT_TYPE_OBJECT;
             break;
-        case Type::mvar:
+        case Type::MethodParam:
             buf[offset + rv++] = ELEMENT_TYPE_MVAR;
             buf[offset + rv++] = tp->VarNum();
             break;
-        case Type::var:
+        case Type::TypeVar:
             buf[offset + rv++] = ELEMENT_TYPE_VAR;
             buf[offset + rv++] = tp->VarNum();
             break;
-        case Type::cls:
+        case Type::ClassRef:
         {
             Class* cls = static_cast<Class*>(tp->GetClass());
             Class* cls1 = cls;
@@ -135,7 +135,7 @@ size_t SignatureGenerator::EmbedType(int* buf, int offset, Type* tp)
             }
             break;
         }
-        case Type::method:
+        case Type::MethodRef:
         {
             MethodSignature* sig = tp->GetMethod();
             buf[offset + rv++] = ELEMENT_TYPE_FNPTR;
@@ -408,10 +408,10 @@ Type* SignatureGenerator::BasicType(PELib& lib, int typeIndex, int pointerLevel)
             type = Type::object;
             break;
         case ELEMENT_TYPE_MVAR:
-            type = Type::mvar;
+            type = Type::MethodParam;
             break;
         case ELEMENT_TYPE_VAR:
-            type = Type::var;
+            type = Type::TypeVar;
             break;
         default:
             printf("Unknown type %x\n", typeIndex);

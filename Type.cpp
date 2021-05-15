@@ -44,7 +44,7 @@ const char* BoxedType::typeNames_[] = {"",        "",       "",       "", "", "B
 
 Type::Type(Type::BasicType Tp, int PointerLevel) : tp_(Tp), arrayLevel_(0), byRef_(false), typeRef_(nullptr), methodRef_(nullptr), peIndex_(0), pinned_(false), showType_(false), varnum_(0)
 {
-    if (Tp == var || Tp == mvar)
+    if (Tp == TypeVar || Tp == MethodParam)
         varnum_ = PointerLevel;
     else
         pointerLevel_ = PointerLevel;
@@ -60,7 +60,7 @@ bool Type::Matches(Type* right)
         return false;
     if (byRef_ != right->byRef_)
         return false;
-    if (tp_ == cls && typeRef_ != right->typeRef_)
+    if (tp_ == ClassRef && typeRef_ != right->typeRef_)
     {
         int n1, n2;
         n1 = typeRef_->Name().find("_empty");
@@ -87,13 +87,13 @@ bool Type::Matches(Type* right)
         else
             return false;
     }
-    if (tp_ == method && methodRef_ != right->methodRef_)
+    if (tp_ == MethodRef && methodRef_ != right->methodRef_)
         return false;
     return true;
 }
 bool Type::ILSrcDump(PELib& peLib) const
 {
-    if (tp_ == cls)
+    if (tp_ == ClassRef)
     {
         if (showType_)
         {
@@ -126,15 +126,15 @@ bool Type::ILSrcDump(PELib& peLib) const
             }
         }
     }
-    else if (tp_ == var)
+    else if (tp_ == TypeVar)
     {
         peLib.Out() << "!" << VarNum();
     }
-    else if (tp_ == mvar)
+    else if (tp_ == MethodParam)
     {
         peLib.Out() << "!!" << VarNum();
     }
-    else if (tp_ == method)
+    else if (tp_ == MethodRef)
     {
         peLib.Out() << "method ";
         methodRef_->ILSrcDump(peLib, false, true, true);
@@ -170,11 +170,11 @@ bool Type::ILSrcDump(PELib& peLib) const
 void Type::ObjOut(PELib& peLib, int pass) const
 {
     peLib.Out() << std::endl << "$tb" << tp_ << "," << byRef_ << "," << arrayLevel_ << "," << pointerLevel_ << "," << pinned_ << "," << showType_;
-    if (tp_ == cls)
+    if (tp_ == ClassRef)
     {
         typeRef_->ObjOut(peLib, -1);
     }
-    else if (tp_ == method)
+    else if (tp_ == MethodRef)
     {
         methodRef_->ObjOut(peLib, -1);
     }
@@ -215,7 +215,7 @@ Type* Type::ObjIn(PELib& peLib)
             peLib.ObjError(oe_syntax);
         int showType = peLib.ObjInt();
         Type* rv = nullptr;
-        if (tp == cls)
+        if (tp == ClassRef)
         {
             std::deque<Type*> generics;
             DataContainer* typeref = nullptr;
@@ -233,7 +233,7 @@ Type* Type::ObjIn(PELib& peLib)
             }
             rv = new Type(typeref);
         }
-        else if (tp == method)
+        else if (tp == MethodRef)
         {
             MethodSignature* methodRef = MethodSignature::ObjIn(peLib, nullptr);
             rv = new Type(methodRef);
@@ -262,7 +262,7 @@ size_t Type::Render(PELib& peLib, Byte* result)
 {
     switch (tp_)
     {
-        case cls:
+        case ClassRef:
             if (typeRef_->InAssemblyRef())
             {
                 typeRef_->PEDump(peLib);
@@ -290,7 +290,7 @@ size_t Type::Render(PELib& peLib, Byte* result)
             }
             return 4;
             break;
-        case method:
+        case MethodRef:
         default:
         {
             if (!peIndex_)

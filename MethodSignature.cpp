@@ -43,18 +43,18 @@ bool MethodSignature::MatchesType(Type *tpa, Type *tpp)
     {
         return false;
     }
-    else if (tpp->GetBasicType() == Type::var)
+    else if (tpp->GetBasicType() == Type::TypeVar)
     {
         // nothing to do, it matches...
     }
-    else if (tpp->GetBasicType() == Type::mvar)
+    else if (tpp->GetBasicType() == Type::MethodParam)
     {
         // nothing to do, it matches...
     }
     else if (tpa->GetBasicType() == tpp->GetBasicType())
     {
         // this may need to deal with boxed types a little better
-        if (tpa->GetBasicType() == Type::cls)
+        if (tpa->GetBasicType() == Type::ClassRef)
             if (tpa->GetClass() != tpp->GetClass())
                 return false;
     }
@@ -135,7 +135,7 @@ bool MethodSignature::ILSrcDump(PELib& peLib, bool names, bool asType, bool PInv
     {
         peLib.Out() << "instance ";
     }
-    if (returnType_->GetBasicType() == Type::cls)
+    if (returnType_->GetBasicType() == Type::ClassRef)
     {
         if (returnType_->GetClass()->Flags().Flags() & Qualifiers::Value)
             peLib.Out() << "valuetype ";
@@ -180,7 +180,7 @@ bool MethodSignature::ILSrcDump(PELib& peLib, bool names, bool asType, bool PInv
     peLib.Out() << AdornGenerics(peLib) << "(";
     for (std::list<Param*>::const_iterator it = params.begin(); it != params.end();)
     {
-        if ((*it)->GetType()->GetBasicType() == Type::cls)
+        if ((*it)->GetType()->GetBasicType() == Type::ClassRef)
         {
             if ((*it)->GetType()->GetClass()->Flags().Flags() & Qualifiers::Value)
                 peLib.Out() << "valuetype ";
@@ -188,7 +188,7 @@ bool MethodSignature::ILSrcDump(PELib& peLib, bool names, bool asType, bool PInv
                 peLib.Out() << "class ";
         }
         (*it)->GetType()->ILSrcDump(peLib);
-        if (names && (*it)->GetType()->GetBasicType() != Type::var && (*it)->GetType()->GetBasicType() != Type::mvar)
+        if (names && (*it)->GetType()->GetBasicType() != Type::TypeVar && (*it)->GetType()->GetBasicType() != Type::MethodParam)
             (*it)->ILSrcDump(peLib);
         ++it;
         if (it != params.end())
@@ -472,7 +472,7 @@ void MethodSignature::ILSignatureDump(PELib& peLib)
     peLib.Out() << "(";
     for (std::list<Param*>::const_iterator it = params.begin(); it != params.end();)
     {
-        if ((*it)->GetType()->GetBasicType() == Type::cls)
+        if ((*it)->GetType()->GetBasicType() == Type::ClassRef)
         {
             if ((*it)->GetType()->GetClass()->Flags().Flags() & Qualifiers::Value)
                 peLib.Out() << "valuetype ";
@@ -493,7 +493,7 @@ bool MethodSignature::PEDump(PELib& peLib, bool asType)
         if (!peIndexCallSite_)
         {
             container_->PEDump(peLib);
-            if (returnType_ && returnType_->GetBasicType() == Type::cls)
+            if (returnType_ && returnType_->GetBasicType() == Type::ClassRef)
             {
                 if (returnType_->GetClass()->InAssemblyRef())
                 {
@@ -502,7 +502,7 @@ bool MethodSignature::PEDump(PELib& peLib, bool asType)
             }
             for (auto param : params)
             {
-                if (param && param->GetType()->GetBasicType() == Type::cls)
+                if (param && param->GetType()->GetBasicType() == Type::ClassRef)
                 {
                     param->GetType()->GetClass()->PEDump(peLib);
                 }
@@ -565,7 +565,7 @@ bool MethodSignature::PEDump(PELib& peLib, bool asType)
         size_t sz;
         size_t function = peLib.PEOut().HashString(name_);
         size_t parent;
-        if (returnType_ && returnType_->GetBasicType() == Type::cls)
+        if (returnType_ && returnType_->GetBasicType() == Type::ClassRef)
         {
             if (returnType_->GetClass()->InAssemblyRef())
             {
@@ -587,7 +587,7 @@ bool MethodSignature::PEDump(PELib& peLib, bool asType)
             if (typeid(*container_) == typeid(Class))
             {
                 Class* cls = static_cast<Class*>(container_);
-                if (cls->Generic().size() && cls->Generic().front()->GetBasicType() != Type::var)
+                if (cls->Generic().size() && cls->Generic().front()->GetBasicType() != Type::TypeVar)
                 {
                     methodreftype = MemberRefParent::TypeSpec;
                 }
@@ -630,7 +630,7 @@ std::string MethodSignature::AdornGenerics(PELib& peLib, bool names) const
         peLib.Out() << "<";
         for (auto&& type : generic_)
         {
-            if (names && type->GetBasicType() == Type::var)
+            if (names && type->GetBasicType() == Type::TypeVar)
             {
                 peLib.Out() << (char)(type->VarNum() / 26 + 'A');
                 peLib.Out() << (char)(type->VarNum() % 26 + 'A');

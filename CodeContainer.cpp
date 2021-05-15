@@ -363,7 +363,7 @@ void CodeContainer::OptimizeLDARG(PELib& peLib)
                                 }
                                 if (instruction->GetOperand()->OperandType() == Operand::t_value &&
                                         instruction->GetOperand()->GetValue()->GetType() &&
-                                        instruction->GetOperand()->GetValue()->GetType()->GetBasicType() == Type::mvar)
+                                        instruction->GetOperand()->GetValue()->GetType()->GetBasicType() == Type::MethodParam)
                                 {
                                     instruction->SetOperand(new Operand(index, Operand::i32));
                                 }
@@ -376,7 +376,7 @@ void CodeContainer::OptimizeLDARG(PELib& peLib)
                             }
                             if (instruction->GetOperand()->OperandType() == Operand::t_value &&
                                     instruction->GetOperand()->GetValue()->GetType() &&
-                                    instruction->GetOperand()->GetValue()->GetType()->GetBasicType() == Type::mvar)
+                                    instruction->GetOperand()->GetValue()->GetType()->GetBasicType() == Type::MethodParam)
                             {
                                 instruction->SetOperand(new Operand(index, Operand::i32));
                             }
@@ -388,7 +388,7 @@ void CodeContainer::OptimizeLDARG(PELib& peLib)
                             }
                             if (instruction->GetOperand()->OperandType() == Operand::t_value &&
                                     instruction->GetOperand()->GetValue()->GetType() &&
-                                    instruction->GetOperand()->GetValue()->GetType()->GetBasicType() == Type::mvar)
+                                    instruction->GetOperand()->GetValue()->GetType()->GetBasicType() == Type::MethodParam)
                             {
                                 instruction->SetOperand(new Operand(index, Operand::i32));
                             }

@@ -246,7 +246,7 @@ PELib::eFindType PELib::Find(std::string path, Resource** result, std::deque<Typ
     std::vector<Method*> foundMethod;
     std::vector<Property*> foundProperty;
 
-    for (auto a : assemblyRefs_)
+    for (AssemblyDef* a : assemblyRefs_)
     {
         //            if (a->InAssemblyRef())
         {
@@ -261,7 +261,8 @@ PELib::eFindType PELib::Find(std::string path, Resource** result, std::deque<Typ
                         found.push_back(dc);
                     }
                     else if (n == split.size() - 1 &&
-                             (typeid(*dc) == typeid(Class) || typeid(*dc) == typeid(Enum) || typeid(*dc) == typeid(AssemblyDef)))
+                             (typeid(*dc) == typeid(Class) || typeid(*dc) == typeid(Enum) ||
+                              typeid(*dc) == typeid(AssemblyDef)))
                     {
                         for (auto field : dc->Fields())
                         {
