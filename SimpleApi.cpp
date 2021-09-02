@@ -25,9 +25,9 @@ public:
     QList<Operand*> d_labels;
     QList<Namespace*> d_nsStack;
     QHash<QByteArray,Type> d_basicTypes;
-    bool d_hasCode, d_hasPrimary;
+    bool d_hasPrimary;
 
-    Imp( const QString& name ):PELib( name.toUtf8().constData() ),d_meth(0),d_hasCode(false),d_hasPrimary(false)
+    Imp( const QString& name ):PELib( name.toUtf8().constData() ),d_meth(0),d_hasPrimary(false)
     {
         d_basicTypes.insert("bool",Type(Type::Bool));
         d_basicTypes.insert("float32",Type(Type::r32));
@@ -55,7 +55,6 @@ public:
     void inline add(Instruction* i)
     {
         Q_ASSERT( d_meth != 0 );
-        d_hasCode = true;
         d_meth->AddInstruction( i );
     }
 
@@ -124,15 +123,36 @@ public:
         return res.first;
     }
 
+    inline Resource* findLocalMethod( const QByteArray& name, DataContainer* d )
+    {
+        const std::list<CodeContainer*>& m = d->Methods();
+        std::list<CodeContainer*>::const_iterator i;
+        for( i = m.begin(); i != m.end(); ++i )
+        {
+            Method* meth = dynamic_cast<Method*>( *i );
+            Q_ASSERT( meth );
+            if( meth->Signature()->Name() == name.constData() )
+                return meth;
+        }
+        return 0;
+    }
+
     Resource* findLocalName( const QByteArray& name, PELib::eFindType what )
     {
         Resource* res = 0;
         if( !d_classStack.isEmpty() )
+        {
             res = d_classStack.back()->FindContainer( name.constData() );
-        else if( !d_nsStack.isEmpty() )
+            if( res == 0 && what == PELib::s_method )
+                res = findLocalMethod(name,d_classStack.back());
+        }else if( !d_nsStack.isEmpty() )
             res = d_nsStack.back()->FindContainer( name.constData() );
         else
+        {
             res = WorkingAssembly()->FindContainer( name.constData() );
+            if( res == 0 && what == PELib::s_method )
+                res = findLocalMethod(name,WorkingAssembly());
+        }
         switch( what )
         {
         case s_namespace:
@@ -305,32 +325,66 @@ void SimpleApi::endNamespace()
     d_imp->d_nsStack.pop_back();
 }
 
-void SimpleApi::beginMethod(const QByteArray& methodName, bool isPublic, bool isStatic, bool isPrimary)
+void SimpleApi::beginMethod(const QByteArray& methodName, bool isPublic, MethodKind kind, bool isRuntime)
 {
     Q_ASSERT( d_imp != 0 );
     Q_ASSERT( d_imp->d_meth == 0 );
     d_imp->d_labels.clear();
     MethodSignature* sig = new MethodSignature( methodName.constData(),
                                         MethodSignature::Managed, d_imp->WorkingAssembly() );
-    Qualifiers q = Qualifiers::CIL |
-            Qualifiers::Managed;
+
+    Qualifiers q = Qualifiers::CIL | Qualifiers::Managed;
+    switch( kind )
+    {
+    case Static:
+        q |= Qualifiers::Static;
+        break;
+    case Primary:
+        q |= Qualifiers::Static;
+        d_imp->d_hasPrimary = true;
+        break;
+    case Instance:
+        q |= Qualifiers::Instance;
+        break;
+    case Virtual:
+        q |= Qualifiers::Virtual;
+        break;
+    }
+
     if( isPublic )
         q |= Qualifiers::Public;
     else
         q |= Qualifiers::Private;
-    if( isStatic )
-        q |= Qualifiers::Static;
-    if( methodName == ".ctor" || methodName == ".cctor" )
+
+    if( isRuntime )
+        q |= Qualifiers::Runtime;
+
+    if( methodName == ".ctor" )
+    {
         q |= Qualifiers::SpecialName | Qualifiers::RTSpecialName;
+        q |= Qualifiers::Instance;
+    }else if( methodName == ".cctor" )
+    {
+        q |= Qualifiers::SpecialName | Qualifiers::RTSpecialName;
+        q |= Qualifiers::Static;
+    }
+
     // TODO: Qualifiers::HideBySig
-    d_imp->d_meth = new Method( sig, q, isPrimary);
-    if( isPrimary )
-        d_imp->d_hasPrimary = true;
+    d_imp->d_meth = new Method( sig, q, kind == Primary);
 
     if( d_imp->d_classStack.isEmpty() )
         d_imp->WorkingAssembly()->Add(d_imp->d_meth); // namespaces only apply to classes!
     else
         d_imp->d_classStack.back()->Add(d_imp->d_meth);
+}
+
+void SimpleApi::openMethod(const QByteArray& methodName)
+{
+    Q_ASSERT( d_imp != 0 );
+    Q_ASSERT( d_imp->d_meth == 0 );
+
+    Resource* res = d_imp->findLocalName(methodName.constData(), PELib::s_method);
+    d_imp->d_meth = (Method*) res;
 }
 
 void SimpleApi::endMethod()
@@ -340,9 +394,6 @@ void SimpleApi::endMethod()
 
     if( !d_imp->d_meth->Signature()->ReturnType() )
         d_imp->d_meth->Signature()->ReturnType( new Type(Type::Void) );
-
-    if( !d_imp->d_hasCode )
-        qWarning() << "method without body:" << d_imp->d_meth->Signature()->Name().c_str();
 
     d_imp->d_meth->Optimize(*d_imp);
 

@@ -161,7 +161,7 @@ namespace DotNetPELib
 
         ///** Add a reference to another assembly
         // this is an empty assembly you can put stuff in if you want to
-        void AddExternalAssembly(const std::string& assemblyName, Byte *publicKeyToken = nullptr); // deprecated
+        AssemblyDef* AddExternalAssembly(const std::string& assemblyName, Byte *publicKeyToken = nullptr); // deprecated
 
         // set the paths where assemblies are looked for. More than one path can be separated by ';'.
         void SetLibPath( const std::string& paths );

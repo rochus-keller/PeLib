@@ -118,7 +118,7 @@ bool PELib::DumpOutputFile(const std::string& file, OutputMode mode, bool gui)
     static_cast<std::fstream&>(*outputStream_).close();
     return rv;
 }
-void PELib::AddExternalAssembly(const std::string& assemblyName, Byte* publicKeyToken)
+AssemblyDef* PELib::AddExternalAssembly(const std::string& assemblyName, Byte* publicKeyToken)
 {
     AssemblyDef* assemblyRef = new AssemblyDef(assemblyName, true, publicKeyToken);
     assemblyRefs_.push_back(assemblyRef);

@@ -57,7 +57,7 @@ void test2()
     {
         api.beginModule("HelloWorld");
         api.addModuleReference("mscorlib");
-        api.beginMethod( "Main", true, true, true );
+        api.beginMethod( "Main", true, SimpleApi::Primary );
         api.LDSTR("Hello World!");
         api.CALL("System.Console.WriteLine(string)");
         api.RET();
@@ -82,7 +82,7 @@ void test3()
         api.addEnum( "Color", true, SimpleApi::EnumItems() << SimpleApi::EnumItem("red",10) <<
                      SimpleApi::EnumItem("blue",20) << SimpleApi::EnumItem("green",30), true );
         api.addModuleReference("mscorlib");
-        api.beginMethod( "Main", true, true, true );
+        api.beginMethod( "Main", true, SimpleApi::Primary );
         //api.LDC(12345);
         api.LDSFLD( "Gugus.Color.green" );
         api.CALL("System.Console.WriteLine(int32)");
@@ -110,13 +110,13 @@ void test4()
 
         api.addField("myString", "string", false, true );
 
-        api.beginMethod(".cctor",false,true,false);
+        api.beginMethod(".cctor",false,SimpleApi::Static);
         api.LDSTR("Hello from .cctor!");
         api.STSFLD("myString");
         api.RET();
         api.endMethod();
 
-        api.beginMethod("Test", false, true, false );
+        api.beginMethod("Test", false, SimpleApi::Static );
         api.addArgument("string&");
         api.LDARG(0);
         api.LDSTR("Hello from Test1!");
@@ -124,7 +124,7 @@ void test4()
         api.RET();
         api.endMethod();
 
-        api.beginMethod( "Main", true, true, true );
+        api.beginMethod( "Main", true, SimpleApi::Primary );
         api.LDSFLD("myString");
         api.CALL("System.Console.WriteLine(string)");
         api.LDSFLDA("myString");
@@ -157,7 +157,7 @@ void test5()
 
         api.beginClass("Inner",true);
 
-        api.beginMethod("DoIt", true, true, false );
+        api.beginMethod("DoIt", true, SimpleApi::Static );
         api.addArgument("string");
         api.LDARG(0);
         api.CALL("System.Console.WriteLine(string)");
@@ -168,7 +168,7 @@ void test5()
 
         api.endClass();
 
-        api.beginMethod( "Main", true, true, true );
+        api.beginMethod( "Main", true, SimpleApi::Primary );
         api.LDSTR("This is a string");
         api.CALL("Outer/Inner::DoIt");
         api.RET();
@@ -203,7 +203,7 @@ void test6()
 
         api.addField("array2", "MyStruct[]",false, true);
 
-        api.beginMethod( "Main", true, true, true );
+        api.beginMethod( "Main", true, SimpleApi::Primary );
         api.addLocal("MyStruct");
 
         api.LDC(10);

@@ -53,10 +53,12 @@ namespace DotNetPELib
         void beginNamespace( const QByteArray& name );
         void endNamespace(); // namespaces can be nested, only apply to classes, structs and enums
 
+        enum MethodKind { Static, Primary, Instance, Virtual };
         void beginMethod(const QByteArray& methodName, // can be on top level or in a class/struct; cannot be in a method
                          bool isPublic = true,
-                         bool isStatic = false,
-                         bool isPrimary = false );
+                         MethodKind = Instance,
+                         bool isRuntime = false );
+        void openMethod(const QByteArray& methodName); // ignores args, returns first match with name
         void endMethod();
 
         void beginClass(const QByteArray& className, bool isPublic = true,
