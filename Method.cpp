@@ -396,9 +396,9 @@ void Method::Compile(PELib& peLib)
 }
 void Method::Optimize(PELib& peLib)
 {
-    CalculateLive();
-    CalculateMaxStack();
-    OptimizeLocals(peLib);
+    //CalculateLive();
+    //CalculateMaxStack();
+    //OptimizeLocals(peLib);
     CodeContainer::Optimize(peLib);
 }
 void Method::CalculateLive()

@@ -32,7 +32,6 @@ namespace DotNetPELib
 {
     class Property;
     class AssemblyDef;
-    class PEReader;
 
     /* a class, note that it cannot contain namespaces which is enforced at compile time*/
     /* note that all classes have to eventually derive from one of the System base classes
@@ -83,9 +82,6 @@ namespace DotNetPELib
         ///** return the list of generics
         std::deque<Type*>& Generic() { return generic_; }
         const std::deque<Type*>& Generic() const { return generic_; }
-
-        ///** root for Load assembly from file
-        void Load(PELib &lib, AssemblyDef &assembly, PEReader &reader, size_t index, int startField, int endField, int startMethod, int endMethod, int startSemantics, int endSemantics);
 
         virtual bool ILSrcDump(PELib &) const override;
 

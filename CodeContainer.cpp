@@ -463,6 +463,7 @@ void CodeContainer::ValidateInstructions()
         else
             switch (instruction->OpCode())
             {
+#if 0 // TODO doesn't work in the presence of virtual or instance methods because of implicit this parameter
                 case Instruction::i_ldarg:
                 case Instruction::i_ldarga:
                 case Instruction::i_starg:
@@ -471,20 +472,21 @@ void CodeContainer::ValidateInstructions()
                         throw PELibError(PELibError::IndexOutOfRange, ((Param*)instruction->GetOperand()->GetValue())->Name());
                     }
                     break;
-                case Instruction::i_ldloc:
-                case Instruction::i_ldloca:
-                case Instruction::i_stloc:
-                    if (((Local*)instruction->GetOperand()->GetValue())->Index() > 65534)
-                    {
-                        throw PELibError(PELibError::IndexOutOfRange, ((Local*)instruction->GetOperand()->GetValue())->Name());
-                    }
-                    break;
                 case Instruction::i_ldarg_s:
                 case Instruction::i_ldarga_s:
                 case Instruction::i_starg_s:
                     if (((Param*)instruction->GetOperand()->GetValue())->Index() > 255)
                     {
                         throw PELibError(PELibError::IndexOutOfRange, ((Param*)instruction->GetOperand()->GetValue())->Name());
+                    }
+                break;
+#endif
+                case Instruction::i_ldloc:
+                case Instruction::i_ldloca:
+                case Instruction::i_stloc:
+                    if (((Local*)instruction->GetOperand()->GetValue())->Index() > 65534)
+                    {
+                        throw PELibError(PELibError::IndexOutOfRange, ((Local*)instruction->GetOperand()->GetValue())->Name());
                     }
                     break;
                 case Instruction::i_ldloc_s:

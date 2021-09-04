@@ -90,6 +90,7 @@ namespace DotNetPELib
     {
     public:
         Param(const std::string& Name, Type *Tp, int index = -1) : Value(Name, Tp), index_(index) { }
+        std::string typeCompare;
 
         ///** return index of argument
         void Index(int Index) { index_ = Index; }

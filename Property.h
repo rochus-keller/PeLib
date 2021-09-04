@@ -38,7 +38,6 @@ namespace DotNetPELib
     class PELib;
     class CodeContainer;
     class AssemblyDef;
-    class PEReader;
     class Class;
 
     /* a property, note we are only supporting classic properties here, not any
@@ -89,8 +88,6 @@ namespace DotNetPELib
         void Setter(Method *setter) { setter_ = setter; }
 
         // internal functions
-        ///** root for Load assembly from file
-        void Load(PELib &lib, AssemblyDef &assembly, PEReader &reader, size_t propIndex, size_t startIndex, size_t startSemantics, size_t endSemantics, std::vector<Method *>& methods);
         virtual bool ILSrcDump(PELib &) const;
         virtual bool PEDump(PELib &);
         virtual void ObjOut(PELib &, int pass) const;

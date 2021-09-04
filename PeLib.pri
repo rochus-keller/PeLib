@@ -65,7 +65,6 @@ SOURCES += \
     $$PWD/PECor20Headers.cpp \
     $$PWD/PELib.cpp \
     $$PWD/PELibError.cpp \
-    $$PWD/PEReader.cpp \
     $$PWD/PEWriter.cpp \
     $$PWD/Property.cpp \
     $$PWD/Qualifiers.cpp \

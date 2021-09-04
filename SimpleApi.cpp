@@ -304,7 +304,7 @@ void SimpleApi::endModule()
 void SimpleApi::addModuleReference(const QByteArray& moduleName)
 {
     Q_ASSERT( d_imp != 0 );
-    d_imp->LoadAssembly(moduleName.constData());
+    d_imp->AddExternalAssembly(moduleName.constData()); // TODO
 }
 
 void SimpleApi::beginNamespace(const QByteArray& name)

@@ -66,6 +66,7 @@ namespace DotNetPELib
 
         ///** is it an entry point function
         bool HasEntryPoint() const { return entryPoint_; }
+        void HasEntryPoint(bool b) { entryPoint_ = b; }
 
         ///** Iterate through local variables
         typedef std::vector<Local *>::iterator iterator;

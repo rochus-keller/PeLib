@@ -37,7 +37,6 @@ namespace DotNetPELib
     typedef unsigned char Byte; /* 1 byte */
     class PELib;
     class AssemblyDef;
-    class PEReader;
 
     ///** class to hold custom attributes.  only parses them at this point, so that
     // you can retrieve attributes from .net assemblies if you want to.  if you
@@ -63,8 +62,6 @@ namespace DotNetPELib
 
         CustomAttributeContainer() { }
         ~CustomAttributeContainer();
-
-        void Load(PELib &peLib, AssemblyDef &assembly, PEReader &reader);
 
         const std::vector<CustomAttributeDescriptor *>& Lookup(CustomAttribute *attribute) const;
 

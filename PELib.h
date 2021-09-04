@@ -112,7 +112,6 @@ namespace DotNetPELib
     class Method;
     class Type;
     class Callback;
-    class PEReader;
     class Param;
     class DataContainer;
     class CodeContainer;
@@ -166,25 +165,11 @@ namespace DotNetPELib
         // set the paths where assemblies are looked for. More than one path can be separated by ';'.
         void SetLibPath( const std::string& paths );
 
-        ///** Load data out of an assembly
-        int LoadAssembly(const std::string& assemblyName, int major = 0, int minor = 0, int build = 0, int revision = 0);
-
-        ///* Load data out of an unmanaged DLL
-        int LoadUnmanaged(const std::string& dllName);
-
-        ///** Load an object file
-        bool LoadObjectFile(const std::string& name);
-
         ///** find an unmanaged dll name
         std::string FindUnmanagedName(const std::string& name);
 
         ///** Find an assembly (in the already loaded set)
         AssemblyDef *FindAssembly(const std::string& assemblyName) const;
-
-        ///** Find a Class
-        // this is just a combination of a bunch of other API calls
-        Class *LookupClass(PEReader &reader, const std::string& assembly, int major, int minor, int build, int revision,
-                           size_t keyIndex, const std::string& nameSpace, const std::string& name);
 
         ///** Pinvoke references are always added to this object
         void AddPInvokeReference(MethodSignature *methodsig, const std::string& dllname, bool iscdecl);
@@ -230,7 +215,6 @@ namespace DotNetPELib
         virtual bool ILSrcDump(PELib &) { return ILSrcDumpHeader() && ILSrcDumpFile(); }
 
         bool ObjOut();
-        bool ObjIn();
         longlong ObjInt();
         int ObjHex2();
         char ObjBegin(bool next = true);

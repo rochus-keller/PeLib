@@ -285,24 +285,11 @@ namespace DotNetPELib {
         // this function sets the index for the 'object' class entry
         static void SetObjectType(size_t ObjectBase) { objectBase = ObjectBase; }
 
-
-        // get a type from a methodref
-        static void TypeFromMethodRef(PELib& lib, AssemblyDef &assembly, PEReader &reader, MethodSignature *sig, size_t blobIndex);
-        // get a type from a fieldref
-        static void TypeFromFieldRef(PELib& lib, AssemblyDef &assembly, PEReader &reader, Field *field, size_t blobIndex);
-        // get a type from a propertyref
-        static void TypeFromPropertyRef(PELib& lib, AssemblyDef &assembly, PEReader &reader, Property *property, size_t blobIndex);
-        // get a type from a signature
-        static Type *GetType(PELib& lib, AssemblyDef &assembly, PEReader &reader, Byte *data, size_t &pos, size_t &len);
     private:
         // a shared function for the various signatures that put in method signatures
         static size_t CoreMethod(MethodSignature *method, int paramCount, int *buf, int offset);
         static size_t LoadIndex(Byte *buf, size_t &start, size_t &len);
-        static Type *TypeFromTypeRef(PELib& lib, AssemblyDef &assembly, PEReader &reader, size_t index, int pointerLevel);
         static Type *BasicType(PELib& lib, int typeIndex, int pointerLevel);
-        static void TypeFromMethod(PELib& lib, AssemblyDef &assembly, PEReader &reader, MethodSignature *method, Byte *data, size_t &start, size_t &len);
-        static std::string LoadClassName(PEReader &reader, size_t index, AssemblyRefTableEntry **assembly, bool isDef);
-        static std::string LoadNameSpaceName(PEReader &reader, size_t index, bool isDef);
         static int workArea[400 * 1024];
         static int basicTypes[];
         static int objectBase;
@@ -470,50 +457,7 @@ namespace DotNetPELib {
         public:
             static TableEntryBase *GetEntry(size_t index);
     };
-    class PEReader
-    {
-    public:
-        static const int ERR_FILE_NOT_FOUND = 1;
-        static const int ERR_NOT_PE = 2;
-        static const int ERR_NOT_ASSEMBLY = 3;
-        static const int ERR_INVALID_ASSEMBLY = 3;
-        static const int ERR_UNKNOWN_TABLE = 5;
 
-        PEReader() : inputFile_(nullptr), corRVA_(0), num_objects_(0), objects_(0), blobPos_(0), stringPos_(0), GUIDPos_(0), stringData_(nullptr), blobData_(nullptr) { }
-        virtual ~PEReader();
-
-        int ManagedLoad(std::string assemblyName, int major, int minor, int build, int revision);
-        int ReadFromString(Byte *buf, size_t len, size_t offset);
-        int ReadFromBlob(Byte *buf, size_t len, size_t offset);
-        int ReadFromGUID(Byte *buf, size_t len, size_t offset);
-        size_t RVAToFileLocation(size_t rva);
-        const DNLTable &Table(int i) const { return tables_[i]; }
-        void LibPath(const std::string& libPath) { libPath_ = libPath;  }
-
-    protected:
-        std::string SearchOnPath(const std::string& assemblyName);
-        std::string FindGACPath(const std::string& path, const std::string& fileName, int major, int minor, int build, int revision);
-        std::string SearchForManagedFile(const std::string& assemblyName, int major, int minor, int build, int revision);
-        void get(void *buffer, size_t offset, size_t len);
-        size_t PELocation();
-        size_t Cor20Location(size_t PEHeader);
-        void GetStream(size_t Cor20, const char *streamName, DWord pos[2]);
-        int ReadTables(size_t Cor20);
-
-    private:
-        std::fstream *inputFile_;
-        int num_objects_;
-        size_t corRVA_;
-        size_t blobPos_;
-        size_t stringPos_;
-        Byte *stringData_;
-        Byte *blobData_;
-        size_t GUIDPos_;
-        PEObject *objects_;
-        DNLTable tables_[MaxTables];
-        size_t sizes_[MaxTables + ExtraIndexes];
-        std::string libPath_;
-    };
     // this class is the base class for index rendering
     // it defines a tag type (which indicates which table the index belongs with) and an index value
     // Based on the specific type of index being rendered, the index is shifted left by a constant and

@@ -122,6 +122,7 @@ AssemblyDef* PELib::AddExternalAssembly(const std::string& assemblyName, Byte* p
 {
     AssemblyDef* assemblyRef = new AssemblyDef(assemblyName, true, publicKeyToken);
     assemblyRefs_.push_back(assemblyRef);
+    return assemblyRef;
 }
 
 void PELib::SetLibPath(const std::string& paths)
@@ -533,80 +534,6 @@ bool PELib::ObjOut()
     *outputStream_ << "$qe";
     return true;
 }
-bool PELib::LoadObjectFile(const std::string& name)
-{
-    bool rv = false;
-    inputStream_ = new std::fstream(name, std::ios::in);
-    if (inputStream_ && inputStream_->is_open())
-        rv = ObjIn();
-    delete inputStream_;
-    inputStream_ = nullptr;
-    return rv;
-}
-bool PELib::ObjIn()
-{
-    bool rv = false;
-    containerStack_.clear();
-    codeContainer_ = nullptr;
-
-    std::string buf((std::istreambuf_iterator<char>(*inputStream_)), std::istreambuf_iterator<char>());
-    objInputPos_ = 0;
-    objInputBuf_ = buf.c_str();
-    objInputSize_ = buf.size();
-
-    try
-    {
-        if (ObjBegin() == 'q')
-        {
-            int ver = ObjInt();
-            int ch = ObjChar();
-            if (ch != ',')
-                ObjError(oe_syntax);
-            int corFlags = ObjInt();
-            if (corFlags & PELib::ilonly)
-                corFlags_ |= PELib::ilonly;
-            if ((corFlags ^ corFlags_) & PELib::bits32)
-                ObjError(oe_corFlagsMismatch);
-            while (ObjBegin() == 'a')
-            {
-                AssemblyDef::ObjIn(*this);
-            }
-            if (ObjBegin(false) == 'm')
-                do
-                {
-                    Method* m = Method::ObjIn(*this);
-                    if (m)
-                    {
-                        pInvokeSignatures_[m->Signature()->Name()] = m;
-                    }
-                } while (ObjBegin() == 'm');
-            if (ObjBegin(false) == 'a')
-                do
-                {
-                    AssemblyDef::ObjIn(*this);
-                } while (ObjBegin() == 'a');
-            if (ObjEnd(false) == 'q')
-            {
-            }
-            else
-            {
-                ObjError(oe_syntax);
-            }
-        }
-        else
-        {
-            ObjError(oe_syntax);
-        }
-        rv = true;
-    }
-    catch (ObjectError&)
-    {
-    }
-    objInputBuf_ = nullptr;
-    objInputSize_ = 0;
-    objInputPos_ = 0;
-    return rv;
-}
 int PELib::ObjHex2()
 {
     char n1, n2;
@@ -738,22 +665,7 @@ AssemblyDef* PELib::FindAssembly(const std::string& assemblyName) const
     }
     return nullptr;
 }
-Class* PELib::LookupClass(PEReader& reader, const std::string& assemblyName, int major, int minor, int build, int revision,
-                          size_t publicKeyIndex, const std::string& nameSpace, const std::string& name)
-{
-    AssemblyDef* assembly = FindAssembly(assemblyName);
-    if (!assembly)
-    {
-        AddExternalAssembly(assemblyName);
-        assembly = FindAssembly(assemblyName);
-        assembly->SetVersion(major, minor, build, revision);
-        if (publicKeyIndex)
-        {
-            assembly->SetPublicKey(reader, publicKeyIndex);
-        }
-    }
-    return assembly->LookupClass(*this, nameSpace, name);
-}
+
 
 bool PELib::DumpPEFile(std::string file, bool isexe, bool isgui)
 {
@@ -859,54 +771,28 @@ bool PELib::DumpPEFile(std::string file, bool isexe, bool isgui)
 }
 AssemblyDef* PELib::MSCorLibAssembly()
 {
+    // [mscorlib]System.ParamArrayAttribute
+    // System. + typeNames_[tp_]
     AssemblyDef* mscorlibAssembly = FindAssembly("mscorlib");
     if (mscorlibAssembly == nullptr)
     {
-        LoadAssembly("mscorlib");
-        mscorlibAssembly = FindAssembly("mscorlib");
+        mscorlibAssembly = AddExternalAssembly("mscorlib");
+        // create mscorlib and add most importand things
+        Namespace* system = new Namespace("System");
+        mscorlibAssembly->Add(system);
+        Class* object = new Class("Object",Qualifiers::Public,-1,-1);
+        system->Add(object);
+        Class* value = new Class("ValueType",Qualifiers::Public,-1,-1);
+        value->Extends(object);
+        system->Add(value);
+        Class* enum_ = new Class("Enum",Qualifiers::Public,-1,-1);
+        enum_->Extends(value);
+        system->Add(enum_);
     }
     return mscorlibAssembly;
 }
-int PELib::LoadAssembly(const std::string& assemblyName, int major, int minor, int build, int revision)
-{
-    AssemblyDef* assembly = FindAssembly(assemblyName);
-    if (assembly == nullptr || !assembly->IsLoaded())
-    {
-        PEReader r;
-        if( !libPath_.empty() )
-            r.LibPath(libPath_);
-        int n = r.ManagedLoad(assemblyName, major, minor, build, revision);
-        if (!n)
-        {
-            if (!assembly)
-                AddExternalAssembly(assemblyName);
-            assembly = FindAssembly(assemblyName);
-            assembly->Load(*this, r);
-            assembly->SetLoaded();
-        }
-        return n;
-    }
-    return 0;
-}
-int PELib::LoadUnmanaged(const std::string& name)
-{
-    DLLExportReader reader(name.c_str());
-    if (reader.Read())
-    {
-        std::string unmanagedDllName = reader.Name();
-        size_t npos = unmanagedDllName.find_last_of(DIR_SEP);
-        if (npos != std::string::npos && npos != unmanagedDllName.size() - 1)
-        {
-            unmanagedDllName = unmanagedDllName.substr(npos + 1);
-        }
-        for (DLLExportReader::iterator it = reader.begin(); it != reader.end(); ++it)
-        {
-            unmanagedRoutines_[(*it)->name] = unmanagedDllName;
-        }
-        return 0;
-    }
-    return 1;
-}
+
+
 std::string PELib::FindUnmanagedName(const std::string& name) { return unmanagedRoutines_[name]; }
 void PELib::Traverse(Callback& callback) const
 {

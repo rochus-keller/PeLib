@@ -349,8 +349,9 @@ size_t Operand::Render(PELib& peLib, int opcode, int operandType, Byte* result)
             break;
         case t_string:
         {
-            wchar_t* buf = new wchar_t[stringValue_.size() + 1];
-            for (int i = 0; i < stringValue_.size() + 1; i++)
+            const int size = stringValue_.size() + 1;
+            wchar_t* buf = new wchar_t[size];
+            for (int i = 0; i < size; i++)
                 buf[i] = stringValue_.c_str()[i];
             size_t usIndex = peLib.PEOut().HashUS(buf);
             *(int*)(result) = usIndex | (0x70 << 24);

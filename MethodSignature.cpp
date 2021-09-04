@@ -606,20 +606,7 @@ bool MethodSignature::PEDump(PELib& peLib, bool asType)
     }
     return true;
 }
-void MethodSignature::Load(PELib& lib, AssemblyDef& assembly, PEReader& reader, int start, int end)
-{
-    const DNLTable& table = reader.Table(tParam);
-    if (start != end && start != table.size())
-    {
-        // check if the last attribute is an array...
-        // we are just going to assume if the attribute exists the data is set properly
-        CustomAttribute attribute(CustomAttribute::ParamDef, start + params.size() - 1);
-        if (assembly.CustomAttributes().Has(attribute, "[mscorlib]System.ParamArrayAttribute"))
-        {
-            flags_ |= Vararg;
-        }
-    }
-}
+
 std::string MethodSignature::AdornGenerics(PELib& peLib, bool names) const
 {
     std::unique_ptr<std::iostream> hold( new std::stringstream() );

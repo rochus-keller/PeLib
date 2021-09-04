@@ -19,17 +19,28 @@ int main()
     assembly->Add(methMain);
 
 
-    AssemblyDef* mscorlib = peFile.AddExternalAssembly("mscorlib");
+    AssemblyDef* mscorlib = peFile.MSCorLibAssembly();
 
-    MethodSignature* sigWriteLine = new MethodSignature("System.Console.WriteLine", MethodSignature::Managed, mscorlib);
+    Resource* r;
+    Class* console;
+#if 1
+    Namespace* system;
+    Q_ASSERT( peFile.Find("System", &r) == PELib::s_namespace );
+    system = (Namespace*)r;
+    if( peFile.Find("Console", &r) != PELib::s_class )
+    {
+        console = new Class("Console",Qualifiers::Public,-1,-1 );
+        system->Add(console);
+    }else
+        console = (Class*)r;
+#else
+    console = new Class("System.Console",Qualifiers::Public,-1,-1 );
+    mscorlib->Add(console);
+#endif
+
+    MethodSignature* sigWriteLine = new MethodSignature("WriteLine", MethodSignature::Managed, console);
     sigWriteLine->ReturnType( new Type(Type::Void) );
     sigWriteLine->AddParam(new Param("", new Type(Type::string)));
-    /*
-    Method* methWriteLine = new Method( sigWriteLine, Qualifiers::Public |
-                                                        Qualifiers::Static |
-                                                        Qualifiers::CIL |
-                                                        Qualifiers::Managed, true);
-    mscorlib->Add(methWriteLine);*/
 
 
     methMain->AddInstruction(
@@ -47,7 +58,7 @@ int main()
         qCritical() << "Optimizer error: " << exc.what();
     }
 
-    //peFile.DumpOutputFile("HiThere.il", PELib::ilasm, false);
+    peFile.DumpOutputFile("HiThere.il", PELib::ilasm, false);
     peFile.DumpOutputFile("HiThere.exe", PELib::peexe, false);
 
 

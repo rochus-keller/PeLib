@@ -247,31 +247,5 @@ bool Property::PEDump(PELib& peLib)
     }
     return true;
 }
-void Property::Load(PELib& lib, AssemblyDef& assembly, PEReader& reader, size_t propIndex, size_t startIndex, size_t startSemantics,
-                    size_t endSemantics, std::vector<Method*>& methods)
-{
-    PropertyTableEntry* entry = static_cast<PropertyTableEntry*>(reader.Table(tProperty)[propIndex - 1]);
-    Byte buf[256];
-    reader.ReadFromString(buf, sizeof(buf), entry->name_.index_);
-    name_ = (char*)buf;
-    SignatureGenerator::TypeFromPropertyRef(lib, assembly, reader, this, entry->propertyType_.index_);
 
-    const DNLTable& table = reader.Table(tMethodSemantics);
-    for (int i = startSemantics; i < endSemantics && i < table.size(); i++)
-    {
-        MethodSemanticsTableEntry* entry2 = static_cast<MethodSemanticsTableEntry*>(table[i]);
-        if (entry2->association_.index_ == propIndex)
-        {
-            if (entry2->semantics_ & MethodSemanticsTableEntry::Getter)
-            {
-                getter_ = methods[entry2->method_.index_ - startIndex];
-            }
-            else if (entry2->semantics_ & MethodSemanticsTableEntry::Setter)
-            {
-                setter_ = methods[entry2->method_.index_ - startIndex];
-            }
-            // otherwise ignore it...
-        }
-    }
-}
 }  // namespace DotNetPELib

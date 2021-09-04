@@ -34,6 +34,7 @@
 namespace DotNetPELib
 {
 
+// corresponds to BasicType: ClassRef, MethodRef, TypeVar, MethodParam, Void, Bool, ...
 const char* Type::typeNames_[] = {"",        "",        "", "", "void",   "bool",       "char",
                                   "int8",    "uint8",   "int16",  "uint16",     "int32",
                                   "uint32",  "int64",   "uint64", "native int", "native unsigned int",

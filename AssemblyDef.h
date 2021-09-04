@@ -34,7 +34,6 @@ namespace DotNetPELib
     typedef unsigned char Byte; /* 1 byte */
     class Class;
     class Namespace;
-    class PEReader;
 
     ///** base class for assembly definitions
     // this holds the main assembly ( as a non-external assembly)
@@ -60,14 +59,8 @@ namespace DotNetPELib
         ///** set name of strong name key file
         void SNKFile(const std::string& file) { snkFile_ = file; }
 
-        ///** root for Load assembly from file
-        void Load(PELib &lib, PEReader &reader);
-
         ///** lookup or create a class
         Class *LookupClass(PELib &lib, const std::string& nameSpace, const std::string& name);
-
-        ///** Set a public key
-        void SetPublicKey(PEReader &reader, size_t index);
 
         const CustomAttributeContainer &CustomAttributes() const { return customAttributes_;  }
 
@@ -82,9 +75,6 @@ namespace DotNetPELib
         bool PEHeaderDump(PELib &);
 
         virtual void ObjOut(PELib &, int pass) const override;
-
-        static AssemblyDef *ObjIn(PELib &, bool definition = true);
-
     protected:
         Namespace *InsertNameSpaces(PELib &lib, std::map<std::string, Namespace *> &nameSpaces, const std::string& name);
         Namespace *InsertNameSpaces(PELib &lib, Namespace *nameSpace, std::string nameSpaceName);

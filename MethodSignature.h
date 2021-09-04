@@ -39,7 +39,6 @@ namespace DotNetPELib
     class Param;
     class PELib;
     class AssemblyDef;
-    class PEReader;
     class Method;
 
     ///** the signature for a method, has a return type and a list of params.
@@ -97,6 +96,7 @@ namespace DotNetPELib
         iterator begin() { return params.begin(); }
         iterator end() { return params.end(); }
         Param* getParam( int i ) const;
+        int getParamCount() const { return params.size(); }
 
         void GenericParent(MethodSignature* sig) { genericParent_ = sig; }
         MethodSignature* GenericParent() const { return genericParent_; }
@@ -146,9 +146,6 @@ namespace DotNetPELib
         void PEIndex(size_t val) { peIndex_ = val;  }
         size_t PEIndexCallSite() const { return peIndexCallSite_; }
         size_t PEIndexType() const { return peIndexType_; }
-
-        // Load a signature
-        void Load(PELib &lib, AssemblyDef &assembly, PEReader &reader, int start, int end);
 
         // internal functions
         void Ref(bool Ref) { ref_ = Ref; }
