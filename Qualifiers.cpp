@@ -1,6 +1,7 @@
 /* Software License Agreement
  *
  *     Copyright(C) 1994-2020 David Lindauer, (LADSoft)
+ *     With modifications by me@rochus-keller.ch (2021)
  *
  *     This file is part of the Orange C Compiler package.
  *
@@ -23,7 +24,7 @@
  */
 
 #include "Qualifiers.h"
-#include "PELib.h"
+#include "Stream.h"
 #include <iostream>
 #include "DataContainer.h"
 #include "Class.h"
@@ -63,22 +64,21 @@ const char* Qualifiers::qualifierNames_[] = {"public",
                                              "",
                                              ""};
 int Qualifiers::afterFlags_ = Qualifiers::PreserveSig | Qualifiers::CIL | Qualifiers::Managed | Qualifiers::Runtime;
-void Qualifiers::ILSrcDumpBeforeFlags(PELib& peLib) const
+void Qualifiers::ILSrcDumpBeforeFlags(Stream& peLib) const
 {
     int n = ~afterFlags_ & flags_;
     for (int i = 0; i < 32; i++)
         if (n & (1 << i))
             peLib.Out() << " " << qualifierNames_[i];
 }
-void Qualifiers::ILSrcDumpAfterFlags(PELib& peLib) const
+void Qualifiers::ILSrcDumpAfterFlags(Stream& peLib) const
 {
     int n = afterFlags_ & flags_;
     for (int i = 0; i < 32; i++)
         if (n & (1 << i))
             peLib.Out() << " " << qualifierNames_[i];
 }
-void Qualifiers::ObjOut(PELib& peLib, int pass) const { peLib.Out() << flags_; }
-void Qualifiers::ObjIn(PELib& peLib, bool definition) { flags_ = peLib.ObjInt(); }
+
 void Qualifiers::ReverseNamePrefix(std::string& rv, const DataContainer* parent, int& pos, bool type)
 {
     if (parent)

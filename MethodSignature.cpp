@@ -24,7 +24,7 @@
  */
 
 #include "MethodSignature.h"
-#include "PELib.h"
+#include "Stream.h"
 #include "PEWriter.h"
 #include "Type.h"
 #include "Value.h"
@@ -124,7 +124,7 @@ void MethodSignature::Instance(bool instance)
     else
         flags_ &= ~InstanceFlag;
 }
-bool MethodSignature::ILSrcDump(PELib& peLib, bool names, bool asType, bool PInvoke) const
+bool MethodSignature::ILSrcDump(Stream& peLib, bool names, bool asType, bool PInvoke) const
 {
     // this usage of vararg is for C style varargs
     // occil uses C# style varags except in pinvoke and generates
@@ -217,242 +217,8 @@ bool MethodSignature::ILSrcDump(PELib& peLib, bool names, bool asType, bool PInv
     peLib.Out() << ")";
     return true;
 }
-void MethodSignature::ObjOut(PELib& peLib, int pass) const
-{
-    if (pass == -1)  // as a reference, we have to do a full signature because of overloads
-                     // and here we need the fully qualified name
-    {
-        if (name_.size())
-            peLib.Out() << std::endl << "$sb" << peLib.FormatName(Qualifiers::GetObjName(name_, container_));
-        else
-            peLib.Out() << std::endl << "$sb" << peLib.FormatName(name_);
-        if (container_ && typeid(*container_) == typeid(Class) && static_cast<Class*>(container_)->Generic().size())
-        {
-            Class* cls = static_cast<Class*>(container_);
-            peLib.Out() << std::endl << "$gb" << cls->Generic().size();
-            cls->GenericParent()->ObjOut(peLib, pass);
-            for (auto t : cls->Generic())
-            {
-                t->ObjOut(peLib, pass);
-            }
-            peLib.Out() << std::endl << "$ge";
-        }
-    }
-    else
-    {
-        // as a definition...
-        peLib.Out() << std::endl << "$sb" << peLib.FormatName(name_);
-        peLib.Out() << external_ << ",";
-    }
-    peLib.Out() << flags_ << ",";
-    peLib.Out() << genericParamCount_ << ",";
-    returnType_->ObjOut(peLib, pass);
-    for (auto p : params)
-    {
-        p->ObjOut(peLib, 1);
-    }
-    if (varargParams_.size())
-    {
-        peLib.Out() << std::endl << "$vb";
-        for (auto p : varargParams_)
-        {
-            p->ObjOut(peLib, 1);
-        }
-        peLib.Out() << std::endl << "$ve";
-    }
-    peLib.Out() << std::endl << "$se";
-}
-MethodSignature* MethodSignature::ObjIn(PELib& peLib, Method** found, bool definition)
-{
-    if (found)
-        *found = nullptr;
-    std::string name = peLib.UnformatName();
-    int external;
-    char ch;
-    int flags = 0;
-    int genericParamCount = 0;
-    Class* genericParent;
-    std::deque<Type*> generics;
-    Type* returnType;
-    if (definition)
-    {
-        external = peLib.ObjInt();
-        ch = peLib.ObjChar();
-        if (ch != ',')
-            peLib.ObjError(oe_syntax);
-    }
-    else
-    {
-        if (peLib.ObjBegin() == 'g')
-        {
-            int n = peLib.ObjInt();
-            if (peLib.ObjBegin() != 'c')
-                peLib.ObjError(oe_syntax);
-            genericParent = Class::ObjIn(peLib, false);
-            for (int i = 0; i < n; i++)
-                generics.push_back(Type::ObjIn(peLib));
-            if (peLib.ObjEnd() != 'g')
-                peLib.ObjError(oe_syntax);
-        }
-        else
-        {
-            peLib.ObjReset();
-        }
-    }
-    flags = peLib.ObjInt();
-    ch = peLib.ObjChar();
-    if (ch != ',')
-        peLib.ObjError(oe_syntax);
-    genericParamCount = peLib.ObjInt();
-    ch = peLib.ObjChar();
-    if (ch != ',')
-        peLib.ObjError(oe_syntax);
-    returnType = Type::ObjIn(peLib);
-    std::vector<Param*> args, vargs;
-    while (peLib.ObjBegin() == 'p')
-    {
-        Param* p = Param::ObjIn(peLib);
-        args.push_back(p);
-    }
-    if (peLib.ObjBegin(false) == 'v')
-    {
-        while (peLib.ObjBegin() == 'p')
-        {
-            Param* p = Param::ObjIn(peLib);
-            vargs.push_back(p);
-        }
-        if (peLib.ObjEnd(false) != 'v')
-            peLib.ObjError(oe_syntax);
-        if (peLib.ObjEnd() != 's')
-            peLib.ObjError(oe_syntax);
-    }
-    else
-    {
-        if (peLib.ObjEnd(false) != 's')
-            peLib.ObjError(oe_syntax);
-    }
-    MethodSignature* rv = nullptr;
-    std::vector<Type*> targs;
-    for (auto p : args)
-    {
-        targs.push_back(p->GetType());
-    }
-    Method* pinvoke = peLib.FindPInvoke(name);
-    if (pinvoke && !(flags & Managed))
-    {
-        if (!vargs.size())
-        {
-            if (found)
-                *found = pinvoke;
-            rv = pinvoke->Signature();
-        }
-        else
-        {
-            MethodSignature* sig = peLib.FindPInvokeWithVarargs(name, vargs);
-            if (sig)
-            {
-                return sig;
-            }
-            else
-            {
-                rv = new MethodSignature(name, MethodSignature::Vararg, nullptr);
-                rv->SignatureParent(pinvoke->Signature());  // tie it to the parent pinvoke
-                rv->ReturnType(returnType);
-                for (auto p : args)
-                    rv->AddParam(p);
-                for (auto v : vargs)
-                    rv->AddVarargParam(v);
-                peLib.AddPInvokeWithVarargs(rv);
-            }
-        }
-    }
-    else if (!peLib.GetContainer())  // defining a pinvoke
-    {
-        rv = new MethodSignature(name, flags, nullptr);
-        rv->ReturnType(returnType);
-        for (auto p : args)
-            rv->AddParam(p);
-        for (auto v : vargs)
-            rv->AddVarargParam(v);
-    }
-    else if (definition)
-    {
-        for (auto m : peLib.GetContainer()->Methods())
-        {
-            Method* c = static_cast<Method*>(m);
-            if (c->Signature()->Name() == name && c->Signature()->Matches(targs))
-            {
-                if (found)
-                    *found = c;
-                rv = c->Signature();
-            }
-        }
-        if (!rv)
-        {
-            rv = new MethodSignature(name, flags, peLib.GetContainer());
-            rv->ReturnType(returnType);
-            rv->External(external);
-            for (auto p : args)
-                rv->AddParam(p);
-            for (auto v : vargs)
-                rv->AddVarargParam(v);
-        }
-        else
-        {
-            if (!external)
-            {
-                if (rv->External())
-                {
-                    auto its = args.begin();
-                    auto itd = rv->params.begin();
-                    while (its != args.end() && itd != rv->params.end())
-                    {
-                        (*itd)->Name((*its)->Name());
-                        ++its;
-                        ++itd;
-                    }
-                }
-                rv->External(false);
-            }
-            if (!rv->ReturnType()->Matches(returnType))
-                peLib.ObjError(oe_typemismatch);
-        }
-        rv->GenericParamCount(genericParamCount);
-        if (!external)
-            rv->Definition();
-    }
-    else if (!name.size())
-    {
-        rv = new MethodSignature(name, flags, peLib.GetContainer());
-        rv->GenericParamCount(genericParamCount);
-        rv->ReturnType(returnType);
-        for (auto p : args)
-            rv->AddParam(p);
-        for (auto v : vargs)
-            rv->AddVarargParam(v);
-    }
-    else
-    {
-        int n = name.find(':');
-        if (generics.size() && n != std::string::npos)
-        {
-            (void)peLib.FindOrCreateGeneric(name.substr(0, n), generics);
-        }
-        Method* m;
-        if (peLib.Find(name, &m, targs, nullptr, generics.size() ? &generics : nullptr) == PELib::s_method)
-        {
-            rv = m->Signature();
-            if (found)
-                *found = m;
-        }
-        else
-        {
-            peLib.ObjError(oe_nomethod);
-        }
-    }
-    return rv;
-}
-void MethodSignature::ILSignatureDump(PELib& peLib)
+
+void MethodSignature::ILSignatureDump(Stream& peLib)
 {
     returnType_->ILSrcDump(peLib);
     peLib.Out() << " ";
@@ -488,7 +254,7 @@ void MethodSignature::ILSignatureDump(PELib& peLib)
     }
     peLib.Out() << ")";
 }
-bool MethodSignature::PEDump(PELib& peLib, bool asType)
+bool MethodSignature::PEDump(Stream& peLib, bool asType)
 {
     if (container_ && container_->InAssemblyRef())
     {
@@ -609,7 +375,7 @@ bool MethodSignature::PEDump(PELib& peLib, bool asType)
     return true;
 }
 
-std::string MethodSignature::AdornGenerics(PELib& peLib, bool names) const
+std::string MethodSignature::AdornGenerics(Stream& peLib, bool names) const
 {
     std::unique_ptr<std::iostream> hold( new std::stringstream() );
     peLib.Swap(hold);

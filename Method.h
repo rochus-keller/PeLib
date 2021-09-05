@@ -33,6 +33,7 @@ namespace DotNetPELib
     class MethodSignature;
     class Local;
     class PEMethod;
+    class Stream;
 
     ///** A method with code
     // CIL instructions are added with the 'Add' member of code container
@@ -77,14 +78,12 @@ namespace DotNetPELib
 
         // Internal functions
         void MaxStack(int stack) { maxStack_ = stack;  }
-        virtual bool ILSrcDump(PELib &) const override;
-        virtual bool PEDump(PELib &) override;
-        virtual void Compile(PELib&) override;
-        virtual void Optimize(PELib &) override;
-        virtual void ObjOut(PELib &, int pass) const override;
-        static Method *ObjIn(PELib &, bool definition = true, Method **found = nullptr);
+        virtual bool ILSrcDump(Stream &) const override;
+        virtual bool PEDump(Stream &) override;
+        virtual void Compile(Stream&) override;
+        virtual void Optimize() override;
     protected:
-        void OptimizeLocals(PELib &);
+        void OptimizeLocals();
         void CalculateMaxStack();
         void CalculateLive();
         MethodSignature *prototype_;

@@ -29,12 +29,12 @@
 #include "Class.h"
 #include "Enum.h"
 #include "PELibError.h"
-#include "PELib.h"
+#include "Stream.h"
 #include "sha1.h"
 #include <climits>
 namespace DotNetPELib
 {
-bool AssemblyDef::ILHeaderDump(PELib& peLib)
+bool AssemblyDef::ILHeaderDump(Stream& peLib)
 {
     peLib.Out() << ".assembly ";
     if (external_)
@@ -58,7 +58,7 @@ bool AssemblyDef::ILHeaderDump(PELib& peLib)
     peLib.Out() << "}" << std::endl;
     return true;
 }
-bool AssemblyDef::PEHeaderDump(PELib& peLib)
+bool AssemblyDef::PEHeaderDump(Stream& peLib)
 {
     size_t nameIndex = peLib.PEOut().HashString(name_);
     TableEntryBase* table;
@@ -215,26 +215,6 @@ Class* AssemblyDef::LookupClass(PELib& lib, const std::string& nameSpaceName, co
     auto rv = InsertClasses(lib, nameSpace, nullptr, name);
     classCache[in] = rv;
     return rv;
-}
-
-
-void AssemblyDef::ObjOut(PELib& peLib, int pass) const
-{
-    if (loaded_)
-    {
-        if (pass == 1)
-        {
-            peLib.Out() << std::endl << "$abr" << peLib.FormatName(name_);
-            peLib.Out() << std::endl << "$ae";
-        }
-        return;
-    }
-    else
-    {
-        peLib.Out() << std::endl << "$abb" << peLib.FormatName(name_) << external_;
-        DataContainer::ObjOut(peLib, pass);
-        peLib.Out() << std::endl << "$ae";
-    }
 }
 
 AssemblyDef::AssemblyDef(const std::string& Name, bool External, Byte* KeyToken): DataContainer(Name, 0), external_(External),

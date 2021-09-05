@@ -26,7 +26,7 @@
 #include "Class.h"
 #include "Callback.h"
 #include "PEWriter.h"
-#include "PELib.h"
+#include "Stream.h"
 #include "Property.h"
 #include "Type.h"
 #include "PELibError.h"
@@ -41,7 +41,7 @@
 namespace DotNetPELib
 {
 
-bool Class::ILSrcDump(PELib& peLib) const
+bool Class::ILSrcDump(Stream& peLib) const
 {
     ILSrcDumpClassHeader(peLib);
     if (extendsFrom_)
@@ -106,7 +106,7 @@ int Class::TransferFlags() const
     }
     return peflags;
 }
-bool Class::PEDump(PELib& peLib)
+bool Class::PEDump(Stream& peLib)
 {
     if (generic_.size() && generic_.front()->GetBasicType() != Type::TypeVar)
     {
@@ -224,7 +224,7 @@ bool Class::PEDump(PELib& peLib)
     }
     return true;
 }
-void Class::ILSrcDumpClassHeader(PELib& peLib) const
+void Class::ILSrcDumpClassHeader(Stream& peLib) const
 {
     peLib.Out() << ".class";
     DataContainer* parent = Parent();
@@ -234,130 +234,6 @@ void Class::ILSrcDumpClassHeader(PELib& peLib) const
     flags_.ILSrcDumpAfterFlags(peLib);
     peLib.Out() << " '" << name_ << "'";
     peLib.Out() << AdornGenerics(peLib, true);
-}
-void Class::ObjOut(PELib& peLib, int pass) const
-{
-    if (pass == -1)
-    {
-        peLib.Out() << std::endl << "$cb" << peLib.FormatName(Qualifiers::GetObjName("", this));
-        if (generic_.size())
-        {
-            peLib.Out() << std::endl << "$gb" << generic_.size();
-            genericParent_->ObjOut(peLib, pass);
-            for (auto t : generic_)
-            {
-                t->ObjOut(peLib, pass);
-            }
-            peLib.Out() << std::endl << "$ge";
-        }
-    }
-    else
-    {
-        peLib.Out() << std::endl << "$cb" << peLib.FormatName(name_) << external_ << ",";
-        peLib.Out() << pack_ << "," << size_ << ",";
-        flags_.ObjOut(peLib, pass);
-        DataContainer::ObjOut(peLib, pass);
-        if (pass == 3)
-        {
-            for (auto p : properties_)
-                p->ObjOut(peLib, pass);
-        }
-    }
-    peLib.Out() << std::endl << "$ce";
-}
-Class* Class::ObjIn(PELib& peLib, bool definition)
-{
-    Class* rv = nullptr;
-    std::string name = peLib.UnformatName();
-    if (definition)
-    {
-        // here we are doing a definition
-        int external = peLib.ObjInt();
-        char ch;
-        ch = peLib.ObjChar();
-        if (ch != ',')
-            peLib.ObjError(oe_syntax);
-        int pack = peLib.ObjInt();
-        ch = peLib.ObjChar();
-        if (ch != ',')
-            peLib.ObjError(oe_syntax);
-        int size = peLib.ObjInt();
-        ch = peLib.ObjChar();
-        if (ch != ',')
-            peLib.ObjError(oe_syntax);
-        Qualifiers flags;
-        flags.ObjIn(peLib);
-        DataContainer* temp;
-        Class* c;
-        temp = peLib.GetContainer()->FindContainer(name);
-        if (temp && typeid(*temp) != typeid(Class))
-            peLib.ObjError(oe_noclass);
-        if (!temp)
-        {
-            rv = c = new Class(name, flags, pack, size);
-        }
-        else
-        {
-            c = static_cast<Class*>(temp);
-        }
-        if (rv)
-            rv->External(external);
-        ((DataContainer*)c)->ObjIn(peLib);
-        peLib.PushContainer(c);
-        while (peLib.ObjBegin() == 'P')
-            c->Add(Property::ObjIn(peLib), false);
-        peLib.PopContainer();
-        if (peLib.ObjEnd(false) != 'c')
-            peLib.ObjError(oe_syntax);
-    }
-    else
-    {
-        // if we get here it is as an operand
-        std::deque<Type*> generics;
-        Class *genericParent;
-        if (peLib.ObjBegin()== 'g')
-        {
-            int n = peLib.ObjInt();
-            if (peLib.ObjBegin() != 'c')
-                peLib.ObjError(oe_syntax);
-            genericParent = Class::ObjIn(peLib, false);
-            for (int i = 0; i < n; i++)
-                generics.push_back(Type::ObjIn(peLib));
-            if (peLib.ObjEnd() != 'g')
-                peLib.ObjError(oe_syntax);
-        }
-        else
-        {
-            peLib.ObjReset();
-        }
-        if (generics.size())
-        {
-            rv = peLib.FindOrCreateGeneric(name, generics);
-            if (!rv)
-            {
-                peLib.ObjError(oe_noclass);
-            }
-            else
-            {
-                rv->genericParent_ = genericParent;
-            }
-        }
-        else
-        {
-            Resource* result = nullptr;
-            if (peLib.Find(name, &result) == PELib::s_class)
-            {
-                rv = static_cast<Class*>(result);
-            }
-            else
-            {
-                peLib.ObjError(oe_noclass);
-            }
-        }
-        if (peLib.ObjEnd() != 'c')
-            peLib.ObjError(oe_syntax);
-    }
-    return rv;
 }
 
 bool Class::Traverse(Callback& callback) const
@@ -369,7 +245,7 @@ bool Class::Traverse(Callback& callback) const
             return false;
     return true;
 }
-std::string Class::AdornGenerics(PELib& peLib, bool names) const
+std::string Class::AdornGenerics(Stream& peLib, bool names) const
 {
     std::unique_ptr<std::iostream> hold( new std::stringstream() );
     peLib.Swap(hold);

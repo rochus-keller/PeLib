@@ -24,7 +24,7 @@
  */
 
 #include "Method.h"
-#include "PELib.h"
+#include "Stream.h"
 #include "PEWriter.h"
 #include "MethodSignature.h"
 #include "Value.h"
@@ -75,7 +75,7 @@ void Method::AddLocal(Local* local)
     varList_.push_back(local);
 }
 
-bool Method::ILSrcDump(PELib& peLib) const
+bool Method::ILSrcDump(Stream& peLib) const
 {
     peLib.Out() << ".method";
     flags_.ILSrcDumpBeforeFlags(peLib);
@@ -135,97 +135,8 @@ bool Method::ILSrcDump(PELib& peLib) const
     }
     return true;
 }
-void Method::ObjOut(PELib& peLib, int pass) const
-{
-    peLib.Out() << std::endl << "$mb";
-    flags_.ObjOut(peLib, pass);
-    peLib.Out() << "," << maxStack_ << "," << invokeMode_ << "," << entryPoint_ << ",";
-    if (invokeMode_ == PInvoke)
-        peLib.Out() << peLib.FormatName(pInvokeName_) << pInvokeType_ << ",";
-    prototype_->ObjOut(peLib, pass);
-    for (auto v : varList_)
-    {
-        peLib.Out() << std::endl << "$vb";  // << peLib.FormatName(v->Name());
-        v->GetType()->ObjOut(peLib, pass);
-        v->ObjOut(peLib, pass);
-        peLib.Out() << std::endl << "$ve";
-    }
-    CodeContainer::ObjOut(peLib, pass);
-    peLib.Out() << std::endl << "$me";
-}
-Method* Method::ObjIn(PELib& peLib, bool definition, Method** rfound)
-{
-    if (rfound)
-        *rfound = nullptr;
-    Method* rv = nullptr;
-    Qualifiers flags;
-    flags.ObjIn(peLib);
-    char ch;
-    ch = peLib.ObjChar();
-    if (ch != ',')
-        peLib.ObjError(oe_syntax);
-    int stack = peLib.ObjInt();
-    ch = peLib.ObjChar();
-    if (ch != ',')
-        peLib.ObjError(oe_syntax);
-    InvokeMode imode = (InvokeMode)peLib.ObjInt();
-    ch = peLib.ObjChar();
-    if (ch != ',')
-        peLib.ObjError(oe_syntax);
-    int entryPoint = peLib.ObjInt();
-    std::string invokeName;
-    InvokeType itype;
-    if (imode == PInvoke)
-    {
-        ch = peLib.ObjChar();
-        if (ch != ',')
-            peLib.ObjError(oe_syntax);
-        invokeName = peLib.UnformatName();
-        itype = (InvokeType)peLib.ObjInt();
-    }
-    ch = peLib.ObjChar();
-    if (ch != ',')
-        peLib.ObjError(oe_syntax);
-    if (peLib.ObjBegin() != 's')
-        peLib.ObjError(oe_syntax);
-    Method* found = nullptr;
-    MethodSignature* prototype = MethodSignature::ObjIn(peLib, &found, definition);
-    if (!found)
-    {
-        rv = found = new Method(prototype, flags, entryPoint);
-        found->MaxStack(stack);
-        if (imode == PInvoke)
-        {
-            found->SetPInvoke(invokeName, itype);
-        }
-    }
-    int n = found->size();
-    while (peLib.ObjBegin() == 'v')
-    {
-        Type* type = Type::ObjIn(peLib);
-        if (peLib.ObjBegin() != 'l')
-            peLib.ObjError(oe_syntax);
-        Local* v = Local::ObjIn(peLib);
-        v->SetType(type);
-        if (!n)
-            found->AddLocal(v);
-        if (peLib.ObjEnd() != 'v')
-            peLib.ObjError(oe_syntax);
-    }
-    peLib.SetCodeContainer(rv);
-    if (peLib.ObjBegin(false) == 'I')
-    {
-        ((CodeContainer*)found)->ObjIn(peLib);
-        if (peLib.ObjEnd() != 'm')
-            peLib.ObjError(oe_syntax);
-    }
-    else if (peLib.ObjEnd(false) != 'm')
-        peLib.ObjError(oe_syntax);
-    if (rfound)
-        *rfound = found;
-    return rv;
-}
-bool Method::PEDump(PELib& peLib)
+
+bool Method::PEDump(Stream& peLib)
 {
     if (!IsPInvoke() && InAssemblyRef())
     {
@@ -370,9 +281,8 @@ bool Method::PEDump(PELib& peLib)
             if (!attributeType && !attributeData)
             {
                 size_t ctor_index = 0;
-                AssemblyDef* assembly = peLib.MSCorLibAssembly();
                 Resource* result = nullptr;
-                peLib.Find("System.ParamArrayAttribute::.ctor", &result, nullptr, assembly);
+                peLib.Find("System.ParamArrayAttribute::.ctor", &result);
                 if (result)
                 {
                     static_cast<Method*>(result)->PEDump(peLib);
@@ -392,17 +302,17 @@ bool Method::PEDump(PELib& peLib)
     }
     return true;
 }
-void Method::Compile(PELib& peLib)
+void Method::Compile(Stream& peLib)
 {
     rendering_->code_ = CodeContainer::Compile(peLib, rendering_->codeSize_);
-    CodeContainer::CompileSEH(peLib, rendering_->sehData_);
+    CodeContainer::CompileSEH(rendering_->sehData_);
 }
-void Method::Optimize(PELib& peLib)
+void Method::Optimize()
 {
     //CalculateLive();
     //CalculateMaxStack();
-    //OptimizeLocals(peLib);
-    CodeContainer::Optimize(peLib);
+    //OptimizeLocals();
+    CodeContainer::Optimize();
 }
 void Method::CalculateLive()
 {
@@ -563,7 +473,7 @@ void Method::CalculateMaxStack()
             throw PELibError(PELibError::StackNotEmpty, " at end of function");
     }
 }
-void Method::OptimizeLocals(PELib& peLib)
+void Method::OptimizeLocals()
 {
     for (auto instruction : instructions_)
     {

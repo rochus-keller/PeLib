@@ -70,11 +70,9 @@ namespace DotNetPELib
 
         void SetLoaded() { loaded_ = true; }
 
-        bool ILHeaderDump(PELib& peLib);
+        bool ILHeaderDump(Stream& peLib);
 
-        bool PEHeaderDump(PELib &);
-
-        virtual void ObjOut(PELib &, int pass) const override;
+        bool PEHeaderDump(Stream&);
     protected:
         Namespace *InsertNameSpaces(PELib &lib, std::map<std::string, Namespace *> &nameSpaces, const std::string& name);
         Namespace *InsertNameSpaces(PELib &lib, Namespace *nameSpace, std::string nameSpaceName);

@@ -30,7 +30,7 @@
 #include "MethodSignature.h"
 #include "Enum.h"
 #include "PELibError.h"
-#include "PELib.h"
+#include "Stream.h"
 #include <stdio.h>
 #include "SignatureGenerator.h"
 
@@ -95,7 +95,7 @@ bool Type::Matches(Type* right)
         return false;
     return true;
 }
-bool Type::ILSrcDump(PELib& peLib) const
+bool Type::ILSrcDump(Stream& peLib) const
 {
     if (tp_ == ClassRef)
     {
@@ -171,98 +171,8 @@ bool Type::ILSrcDump(PELib& peLib) const
         peLib.Out() << " pinned";
     return true;
 }
-void Type::ObjOut(PELib& peLib, int pass) const
-{
-    peLib.Out() << std::endl << "$tb" << tp_ << "," << byRef_ << "," << arrayLevel_ << "," << pointerLevel_ << "," << pinned_ << "," << showType_;
-    if (tp_ == ClassRef)
-    {
-        typeRef_->ObjOut(peLib, -1);
-    }
-    else if (tp_ == MethodRef)
-    {
-        methodRef_->ObjOut(peLib, -1);
-    }
-    peLib.Out() << std::endl << "$te";
-}
-Type* Type::ObjIn(PELib& peLib)
-{
-    if (peLib.ObjBegin() == 'B')
-    {
-        Type* rv = BoxedType::ObjIn(peLib);
-        if (peLib.ObjEnd() != 'B')
-            peLib.ObjError(oe_syntax);
-        return rv;
-    }
-    else if (peLib.ObjBegin(false) == 't')
-    {
 
-        BasicType tp = (BasicType)peLib.ObjInt();
-        char ch;
-        ch = peLib.ObjChar();
-        if (ch != ',')
-            peLib.ObjError(oe_syntax);
-        int byRef = peLib.ObjInt();
-        ch = peLib.ObjChar();
-        if (ch != ',')
-            peLib.ObjError(oe_syntax);
-        int arrayLevel = peLib.ObjInt();
-        ch = peLib.ObjChar();
-        if (ch != ',')
-            peLib.ObjError(oe_syntax);
-        int pointerLevel = peLib.ObjInt();
-        ch = peLib.ObjChar();
-        if (ch != ',')
-            peLib.ObjError(oe_syntax);
-        int pinned = peLib.ObjInt();
-        ch = peLib.ObjChar();
-        if (ch != ',')
-            peLib.ObjError(oe_syntax);
-        int showType = peLib.ObjInt();
-        Type* rv = nullptr;
-        if (tp == ClassRef)
-        {
-            std::deque<Type*> generics;
-            DataContainer* typeref = nullptr;
-            if (peLib.ObjBegin() == 'c')
-            {
-                typeref = Class::ObjIn(peLib, false);
-            }
-            else if (peLib.ObjBegin(false) == 'E')
-            {
-                typeref = Enum::ObjIn(peLib, false);
-            }
-            else
-            {
-                peLib.ObjError(oe_syntax);
-            }
-            rv = new Type(typeref);
-        }
-        else if (tp == MethodRef)
-        {
-            MethodSignature* methodRef = MethodSignature::ObjIn(peLib, nullptr);
-            rv = new Type(methodRef);
-        }
-        else
-        {
-            rv = new Type(tp, 0);
-        }
-        if (showType)
-            rv->ShowType();
-        rv->Pinned(pinned);
-        rv->PointerLevel(pointerLevel);
-        rv->ArrayLevel(arrayLevel);
-        rv->ByRef(byRef);
-        if (peLib.ObjEnd() != 't')
-            peLib.ObjError(oe_syntax);
-        return rv;
-    }
-    else
-    {
-        peLib.ObjError(oe_syntax);
-    }
-    return nullptr;
-}
-size_t Type::Render(PELib& peLib, Byte* result)
+size_t Type::Render(Stream& peLib, Byte* result)
 {
     switch (tp_)
     {
@@ -315,27 +225,21 @@ size_t Type::Render(PELib& peLib, Byte* result)
     }
     return true;
 }
-bool BoxedType::ILSrcDump(PELib& peLib) const
+bool BoxedType::ILSrcDump(Stream& peLib) const
 {
     // no point in looking up the type name in the assembly for this...
     peLib.Out() << "[mscorlib]System." << typeNames_[tp_];
     return true;
 }
-void BoxedType::ObjOut(PELib& peLib, int pass) const { peLib.Out() << std::endl << "$Bb" << tp_ << std::endl << "$Be"; }
-BoxedType* BoxedType::ObjIn(PELib& peLib)
-{
-    Type::BasicType type = (Type::BasicType)peLib.ObjInt();
-    return new BoxedType(type);
-}
-size_t BoxedType::Render(PELib& peLib, Byte* result)
+
+size_t BoxedType::Render(Stream& peLib, Byte* result)
 {
     if (!peIndex_)
     {
         size_t system = peLib.PEOut().SystemName();
         size_t name = peLib.PEOut().HashString(typeNames_[tp_]);
-        AssemblyDef* assembly = peLib.MSCorLibAssembly();
         Resource* result = nullptr;
-        peLib.Find(std::string("System.") + typeNames_[tp_], &result, nullptr, assembly);
+        peLib.Find(std::string("System.") + typeNames_[tp_], &result);
         if (result)
         {
             static_cast<Class*>(result)->PEDump(peLib);

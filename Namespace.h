@@ -30,6 +30,8 @@
 
 namespace DotNetPELib
 {
+    class Stream;
+
     ///** a namespace
     class Namespace : public DataContainer
     {
@@ -40,10 +42,8 @@ namespace DotNetPELib
         std::string ReverseName(DataContainer *child);
 
         // internal stuff
-        virtual bool ILSrcDump(PELib &) const override;
-        virtual bool PEDump(PELib &) override;
-        virtual void ObjOut(PELib &, int pass) const override;
-        static Namespace *ObjIn(PELib &, bool definition = true);
+        virtual bool ILSrcDump(Stream &) const override;
+        virtual bool PEDump(Stream &) override;
     };
 
 }

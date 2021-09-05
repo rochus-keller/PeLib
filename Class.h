@@ -32,6 +32,7 @@ namespace DotNetPELib
 {
     class Property;
     class AssemblyDef;
+    class Stream;
 
     /* a class, note that it cannot contain namespaces which is enforced at compile time*/
     /* note that all classes have to eventually derive from one of the System base classes
@@ -83,17 +84,13 @@ namespace DotNetPELib
         std::deque<Type*>& Generic() { return generic_; }
         const std::deque<Type*>& Generic() const { return generic_; }
 
-        virtual bool ILSrcDump(PELib &) const override;
+        virtual bool ILSrcDump(Stream &) const override;
 
-        virtual bool PEDump(PELib &) override;
+        virtual bool PEDump(Stream &) override;
 
-        void ILSrcDumpClassHeader(PELib &) const;
+        void ILSrcDumpClassHeader(Stream&) const;
 
-        virtual void ObjOut(PELib &, int pass) const override;
-
-        static Class *ObjIn(PELib &, bool definition = true);
-
-        std::string AdornGenerics(PELib& peLib, bool names = false) const;
+        std::string AdornGenerics(Stream& peLib, bool names = false) const;
 
         bool MatchesGeneric(std::deque<Type*>* generics) const;
     protected:

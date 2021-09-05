@@ -30,8 +30,8 @@
 
 namespace DotNetPELib
 {
-    class PELib;
     class DataContainer;
+    class Stream;
 
     // Qualifiers is a generic class that holds all the 'tags' you would see on various objects in
     // the assembly file.   Where possible things are handled implicitly for example 'nested'
@@ -87,10 +87,10 @@ namespace DotNetPELib
         }
 
         ///** most qualifiers come before the name of the item
-        void ILSrcDumpBeforeFlags(PELib &) const;
+        void ILSrcDumpBeforeFlags(Stream&) const;
 
         ///** but a couple of the method qualifiers come after the method definition
-        void ILSrcDumpAfterFlags(PELib &) const;
+        void ILSrcDumpAfterFlags(Stream&) const;
 
         ///** get a name for a DataContainer object, suitable for use in an ASM file
         // The main problem is there is a separator character between the first class encountered
@@ -99,8 +99,6 @@ namespace DotNetPELib
         static std::string GetObjName(const std::string& root, const DataContainer *parent);
 
         // internal stuff
-        virtual void ObjOut(PELib &, int pass) const;
-        void ObjIn(PELib &, bool definition = true);
         int Flags() const { return flags_; }
         void Flags(int flags) { flags_ = flags;  }
 

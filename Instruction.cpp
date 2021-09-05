@@ -29,7 +29,7 @@
 #include "Value.h"
 #include "Type.h"
 #include "PELibError.h"
-#include "PELib.h" // TODO
+#include "Stream.h"
 #include <iostream>
 #include <float.h>
 namespace DotNetPELib
@@ -332,7 +332,7 @@ void Instruction::AddCaseLabel(const std::string& label)
         switches_ = new std::list<std::string>();
     switches_->push_back(label);
 }
-bool Instruction::ILSrcDump(PELib& peLib) const
+bool Instruction::ILSrcDump(Stream& peLib) const
 {
     if (op_ == i_SEH)
     {
@@ -413,137 +413,8 @@ bool Instruction::ILSrcDump(PELib& peLib) const
     }
     return true;
 }
-void Instruction::ObjOut(PELib& peLib, int pass) const
-{
-    peLib.Out() << std::endl << "$ib" << op_ << "," << offset_;
-    if (op_ == i_SEH)
-    {
-        peLib.Out() << "," << sehType_ << "," << sehBegin_;
-        if (sehCatchType_)
-        {
-            peLib.Out() << ",";
-            sehCatchType_->ObjOut(peLib, pass);
-        }
-        else
-        {
-            peLib.Out() << "@";
-        }
-    }
-    else if (op_ == i_label)
-    {
-        peLib.Out() << "," << peLib.FormatName(Label());
-    }
-    else if (op_ == i_comment)
-    {
-        peLib.Out() << "," << peLib.FormatName(Text());
-    }
-    else if (op_ == i_switch)
-    {
-        peLib.Out() << "," << switches_->size();
-        for (auto sw : *switches_)
-        {
-            peLib.Out() << "," << peLib.FormatName(sw);
-        }
-    }
-    else
-    {
-        if (operand_)
-        {
-            peLib.Out() << ",";
-            operand_->ObjOut(peLib, pass);
-        }
-        else
-            peLib.Out() << "$$";
-        {
-        }
-    }
-    peLib.Out() << std::endl << "$ie";
-}
-Instruction* Instruction::ObjIn(PELib& peLib)
-{
-    Instruction* rv = nullptr;
-    iop op = (iop)peLib.ObjInt();
-    char ch;
-    ch = peLib.ObjChar();
-    if (ch != ',')
-        peLib.ObjError(oe_syntax);
-    int offset = peLib.ObjInt();
-    ch = peLib.ObjChar();
-    if (ch == ',')
-    {
-        switch (op)
-        {
-            int sehType;
-            bool sehBegin;
-            Type* sehCatchType;
-            case i_SEH:
-                sehType = peLib.ObjInt();
-                ch = peLib.ObjChar();
-                if (ch != ',')
-                    peLib.ObjError(oe_syntax);
-                sehBegin = peLib.ObjInt();
-                ch = peLib.ObjChar();
-                if (ch == ',')
-                {
-                    sehCatchType = Type::ObjIn(peLib);
-                }
-                else
-                {
-                    sehCatchType = nullptr;
-                }
-                rv = new Instruction((Instruction::iseh)sehType, sehBegin, sehCatchType);
-                break;
-            case i_label:
-            {
-                std::string lbl = peLib.UnformatName();
-                rv = new Instruction(op, new Operand(lbl));
-            }
-            break;
-            case i_comment:
-            {
-                std::string text = peLib.UnformatName();
-                rv = new Instruction(op, text);
-            }
-            break;
-            case i_switch:
-            {
-                rv = new Instruction(op);
-                int n = peLib.ObjInt();
-                for (int i = 0; i < n; i++)
-                {
-                    ch = peLib.ObjChar();
-                    if (ch != ',')
-                        peLib.ObjError(oe_syntax);
-                    std::string text = peLib.UnformatName();
-                    rv->AddCaseLabel(text);
-                }
-            }
-            break;
-            default:
-            {
-                Operand* operand = Operand::ObjIn(peLib);
-                rv = new Instruction(op, operand);
-            }
-            break;
-        }
-    }
-    else
-    {
-        rv = new Instruction(op);
-        if (ch == '$')
-        {
-            ch = peLib.ObjChar();
-        }
-        if (ch != '$')
-            peLib.ObjError(oe_syntax);
-    }
-    if (peLib.ObjEnd() != 'i')
-        peLib.ObjError(oe_syntax);
-    if (rv)
-        rv->Offset(offset);
-    return rv;
-}
-size_t Instruction::Render(PELib& peLib, Byte* result, std::map<std::string, Instruction*>& labels)
+
+size_t Instruction::Render(Stream& peLib, Byte* result, std::map<std::string, Instruction*>& labels)
 {
 
     int sz = 0;

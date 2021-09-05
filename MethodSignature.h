@@ -37,9 +37,9 @@ namespace DotNetPELib
     class Type;
     class DataContainer;
     class Param;
-    class PELib;
     class AssemblyDef;
     class Method;
+    class Stream;
 
     ///** the signature for a method, has a return type and a list of params.
     // params can be either named or unnamed
@@ -150,12 +150,10 @@ namespace DotNetPELib
         // internal functions
         void Ref(bool Ref) { ref_ = Ref; }
         bool IsRef() const { return ref_; }
-        void ILSignatureDump(PELib &peLib);
-        virtual bool ILSrcDump(PELib &, bool names, bool asType, bool PInvoke) const;
-        virtual bool PEDump(PELib &, bool asType);
-        virtual void ObjOut(PELib &, int pass) const;
-        static MethodSignature *ObjIn(PELib &, Method **found, bool definition = true);
-        std::string AdornGenerics(PELib& peLib, bool names = false) const;
+        void ILSignatureDump(Stream& peLib);
+        virtual bool ILSrcDump(Stream &, bool names, bool asType, bool PInvoke) const;
+        virtual bool PEDump(Stream &, bool asType);
+        std::string AdornGenerics(Stream& peLib, bool names = false) const;
 
     protected:
         MethodSignature *methodParent_;

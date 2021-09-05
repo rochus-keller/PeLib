@@ -37,6 +37,7 @@ namespace DotNetPELib
 {
     class PELib;
     class Instruction;
+    class Stream;
     typedef unsigned char Byte; /* 1 byte */
 
     ///** base class that contains instructions/ labels
@@ -90,25 +91,21 @@ namespace DotNetPELib
 
         void BaseTypes(int &types) const;
 
-        virtual void Optimize(PELib &);
+        virtual void Optimize();
 
-        virtual bool ILSrcDump(PELib &) const;
+        virtual bool ILSrcDump(Stream &) const;
 
-        virtual bool PEDump(PELib &) { return false; }
+        virtual bool PEDump(Stream &) { return false; }
 
-        virtual void Render(PELib&) { }
+        virtual void Render(Stream&) { }
 
-        virtual void ObjOut(PELib &, int pass) const;
-
-        void ObjIn(PELib &);
-
-        Byte *Compile(PELib &, size_t &sz);
+        Byte *Compile(Stream&, size_t &sz);
 
         int CompileSEH(std::vector<Instruction *>tags, int offset, std::vector<SEHData> &sehData);
 
-        void CompileSEH(PELib &, std::vector<SEHData> &sehData);
+        void CompileSEH(std::vector<SEHData> &sehData);
 
-        virtual void Compile(PELib&) { }
+        virtual void Compile(Stream&) { }
 
         std::list<Instruction *>::iterator begin() { return instructions_.begin(); }
         std::list<Instruction *>::iterator end() { return instructions_.end(); }
@@ -116,10 +113,10 @@ namespace DotNetPELib
     protected:
         std::map<std::string, Instruction *> labels;
         void LoadLabels();
-        void OptimizeLDC(PELib &);
-        void OptimizeLDLOC(PELib &);
-        void OptimizeLDARG(PELib &);
-        void OptimizeBranch(PELib &);
+        void OptimizeLDC();
+        void OptimizeLDLOC();
+        void OptimizeLDARG();
+        void OptimizeBranch();
         void CalculateOffsets();
         bool ModifyBranches();
         std::list<Instruction *> instructions_;

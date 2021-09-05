@@ -24,7 +24,7 @@
  */
 
 #include "Enum.h"
-#include "PELib.h"
+#include "Stream.h"
 #include "PEWriter.h"
 #include "Type.h"
 #include "PELibError.h"
@@ -40,7 +40,7 @@ Field* Enum::AddValue(const std::string& Name, longlong Value)
     Add(field);
     return field;
 }
-bool Enum::ILSrcDump(PELib& peLib) const
+bool Enum::ILSrcDump(Stream& peLib) const
 {
     ILSrcDumpClassHeader(peLib);
     peLib.Out() << " {" << std::endl;
@@ -51,63 +51,8 @@ bool Enum::ILSrcDump(PELib& peLib) const
     peLib.Out() << "}" << std::endl;
     return true;
 }
-void Enum::ObjOut(PELib& peLib, int pass) const
-{
-    if (pass == -1)
-    {
-        peLib.Out() << std::endl << "$Eb" << peLib.FormatName(Qualifiers::GetObjName(name_, parent_));
-        peLib.Out() << std::endl << "$Ee";
-    }
-    else
-    {
-        peLib.Out() << std::endl << "$Eb" << peLib.FormatName(name_) << size_ << "," << flags_.Flags();
-        DataContainer::ObjOut(peLib, pass);
-        peLib.Out() << std::endl << "$Ee";
-    }
-}
-Enum* Enum::ObjIn(PELib& peLib, bool definition)
-{
-    Enum* rv = nullptr;
-    std::string name = peLib.UnformatName();
-    if (definition)
-    {
-        // as a definition
-        Field::ValueSize size = (Field::ValueSize)peLib.ObjInt();
-        char ch;
-        ch = peLib.ObjChar();
-        if (ch != ',')
-            peLib.ObjError(oe_syntax);
-        Qualifiers flags;
-        flags.ObjIn(peLib);
-        DataContainer* temp;
-        Enum* e;
-        temp = peLib.GetContainer()->FindContainer(name);
-        if (temp && typeid(*temp) != typeid(Enum))
-            peLib.ObjError(oe_noenum);
-        if (!temp)
-            rv = e = new Enum(name, flags, size);
-        else
-            e = static_cast<Enum*>(temp);
-        ((DataContainer*)e)->ObjIn(peLib);
-    }
-    else
-    {
-        // if we get here it is as an operand
-        Resource* result;
-        if (peLib.Find(name, &result) == PELib::s_enum)
-        {
-            rv = static_cast<Enum*>(result);
-        }
-        else
-        {
-            peLib.ObjError(oe_noenum);
-        }
-    }
-    if (peLib.ObjEnd() != 'E')
-        peLib.ObjError(oe_syntax);
-    return rv;
-}
-bool Enum::PEDump(PELib& peLib)
+
+bool Enum::PEDump(Stream& peLib)
 {
     if (!InAssemblyRef())
     {

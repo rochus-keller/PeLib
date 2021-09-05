@@ -39,6 +39,7 @@ namespace DotNetPELib
     class Type;
     class Callback;
     class CodeContainer;
+    class Stream;
 
     ///** base class that contains other datacontainers or codecontainers
     // that means it can contain namespaces, classes, methods, or fields
@@ -88,13 +89,13 @@ namespace DotNetPELib
         void Parent(DataContainer* parent) { parent_ = parent; }
 
         ///** The inner namespace parent
-        size_t ParentNamespace(PELib &peLib) const;
+        size_t ParentNamespace(Stream& peLib) const;
 
         ///** The closest parent class
-        size_t ParentClass(PELib &peLib) const;
+        size_t ParentClass(Stream &peLib) const;
 
         ///** The parent assembly
-        size_t ParentAssembly(PELib &peLib) const;
+        size_t ParentAssembly(Stream& peLib) const;
 
         ///** The name
         const std::string &Name() const { return name_; }
@@ -125,20 +126,16 @@ namespace DotNetPELib
         // internal functions
         virtual bool InAssemblyRef() const { return parent_->InAssemblyRef(); }
 
-        virtual bool ILSrcDump(PELib &) const;
+        virtual bool ILSrcDump(Stream &) const;
 
-        virtual bool PEDump(PELib &);
+        virtual bool PEDump(Stream &);
 
-        virtual void Compile(PELib&);
-
-        virtual void ObjOut(PELib &, int pass) const;
-
-        void ObjIn(PELib &, bool definition = true);
+        virtual void Compile(Stream&);
 
         void Number(int &n);
 
         // sometimes we want to traverse upwards in the tree
-        void Render(PELib&);
+        void Render(Stream&);
 
         void BaseTypes(int &types) const;
 

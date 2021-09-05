@@ -25,12 +25,12 @@
 
 #include "Namespace.h"
 #include "PELibError.h"
-#include "PELib.h"
+#include "Stream.h"
 #include "PEWriter.h"
 namespace DotNetPELib
 {
 
-bool Namespace::ILSrcDump(PELib& peLib) const
+bool Namespace::ILSrcDump(Stream& peLib) const
 {
 
     peLib.Out() << ".namespace '" << name_ << "' {" << std::endl;
@@ -38,27 +38,7 @@ bool Namespace::ILSrcDump(PELib& peLib) const
     peLib.Out() << "}" << std::endl;
     return true;
 }
-void Namespace::ObjOut(PELib& peLib, int pass) const
-{
-    peLib.Out() << std::endl << "$nb" << peLib.FormatName(name_);
-    DataContainer::ObjOut(peLib, pass);
-    peLib.Out() << std::endl << "$ne";
-}
-Namespace* Namespace::ObjIn(PELib& peLib, bool definition)
-{
-    // always a definition (never used as an operand)
-    std::string name = peLib.UnformatName();
-    Namespace *temp, *rv = nullptr;
-    temp = (Namespace*)peLib.GetContainer()->FindContainer(name);
-    if (temp && typeid(*temp) != typeid(Namespace))
-        peLib.ObjError(oe_nonamespace);
-    if (!temp)
-        rv = temp = new Namespace(name);
-    ((DataContainer*)temp)->ObjIn(peLib);
-    if (peLib.ObjEnd() != 'n')
-        peLib.ObjError(oe_syntax);
-    return rv;
-}
+
 std::string Namespace::ReverseName(DataContainer* child)
 {
     std::string rv;
@@ -70,7 +50,7 @@ std::string Namespace::ReverseName(DataContainer* child)
     }
     return rv;
 }
-bool Namespace::PEDump(PELib& peLib)
+bool Namespace::PEDump(Stream& peLib)
 {
     if (!InAssemblyRef() || !PEIndex())
     {

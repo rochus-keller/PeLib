@@ -32,7 +32,7 @@
 namespace DotNetPELib
 {
     class Value;
-    class PELib;
+    class Stream;
     typedef long long longlong;
     typedef unsigned char Byte; /* 1 byte */
 
@@ -49,7 +49,7 @@ namespace DotNetPELib
         Operand() : type_(t_none), intValue_(0), sz_(i8), refValue_(nullptr), floatValue_(0), property_(0) {} // no operand
 
         ///** Operand is a complex value
-        Operand(Value *V) : type_(t_value), refValue_(V), property_(false), sz_(i8), intValue_(0), floatValue_(0){}
+        Operand(Value *V);
 
         ///** Operand is an integer constant
         Operand(longlong Value, OpSize Size) : type_(t_int), intValue_(Value), sz_(Size), refValue_(nullptr), floatValue_(0), property_(0){}
@@ -85,10 +85,8 @@ namespace DotNetPELib
         void Property(bool state) { property_ = state;  }
 
         ///** Internal functions
-        virtual bool ILSrcDump(PELib &) const;
-        size_t Render(PELib &peLib, int opcode, int operandType, Byte *);
-        virtual void ObjOut(PELib &, int pass) const;
-        static Operand * ObjIn(PELib &);
+        virtual bool ILSrcDump(Stream &) const;
+        size_t Render(Stream& peLib, int opcode, int operandType, Byte *);
         std::string EscapedString() const;
 
     protected:

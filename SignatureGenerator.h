@@ -12,7 +12,6 @@ class Property;
 class Field;
 class Method;
 class Type;
-class PELib;
 
 // This class holds functions for generating the various signatures we need
 // to put in the blob stream
@@ -44,7 +43,6 @@ private:
     // a shared function for the various signatures that put in method signatures
     static size_t CoreMethod(MethodSignature *method, int paramCount, int *buf, int offset);
     static size_t LoadIndex(Byte *buf, size_t &start, size_t &len);
-    static Type *BasicType(PELib& lib, int typeIndex, int pointerLevel);
     static int workArea[400 * 1024];
     static int basicTypes[];
     static int objectBase;

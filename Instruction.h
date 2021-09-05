@@ -35,6 +35,7 @@ namespace DotNetPELib
     class Operand;
     class PELib;
     class Type;
+    class Stream;
     typedef unsigned char Byte; /* 1 byte */
 
     /* a CIL instruction */
@@ -167,10 +168,8 @@ namespace DotNetPELib
         bool IsLive() const { return live_; }
 
         // internal methods and structures
-        virtual bool ILSrcDump(PELib &) const;
-        size_t Render(PELib & peLib, Byte *, std::map<std::string, Instruction *> &labels);
-        virtual void ObjOut(PELib &, int pass) const;
-        static Instruction *ObjIn(PELib &);
+        virtual bool ILSrcDump(Stream &) const;
+        size_t Render(Stream& peLib, Byte *, std::map<std::string, Instruction *> &labels);
 
     protected:
         std::list<std::string> *switches_;

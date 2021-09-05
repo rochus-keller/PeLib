@@ -26,7 +26,7 @@
 #include "DataContainer.h"
 #include "Callback.h"
 #include "PEMetaTables.h"
-#include "PELib.h"
+#include "Stream.h"
 #include "PEWriter.h"
 #include "Field.h"
 #include "Namespace.h"
@@ -65,7 +65,7 @@ void DataContainer::Add(Field* field)
         fields_.push_back(field);
     }
 }
-size_t DataContainer::ParentNamespace(PELib& peLib) const
+size_t DataContainer::ParentNamespace(Stream& peLib) const
 {
     DataContainer* current = this->Parent();
     while (current && typeid(*current) != typeid(Namespace))
@@ -78,7 +78,7 @@ size_t DataContainer::ParentNamespace(PELib& peLib) const
     }
     return 0;
 }
-size_t DataContainer::ParentClass(PELib& peLib) const
+size_t DataContainer::ParentClass(Stream& peLib) const
 {
     DataContainer* current = Parent();
     if (current && typeid(*current) == typeid(Class))
@@ -89,7 +89,7 @@ size_t DataContainer::ParentClass(PELib& peLib) const
     }
     return 0;
 }
-size_t DataContainer::ParentAssembly(PELib& peLib) const
+size_t DataContainer::ParentAssembly(Stream& peLib) const
 {
     // the parent assembly is always at top of the datacontainer tree
     DataContainer* current = Parent();
@@ -138,7 +138,7 @@ DataContainer* DataContainer::FindContainer(std::vector<std::string>& split, siz
     }
     return rv;
 }
-bool DataContainer::ILSrcDump(PELib& peLib) const
+bool DataContainer::ILSrcDump(Stream& peLib) const
 {
     for (std::list<Field*>::const_iterator it = fields_.begin(); it != fields_.end(); ++it)
         (*it)->ILSrcDump(peLib);
@@ -148,58 +148,8 @@ bool DataContainer::ILSrcDump(PELib& peLib) const
         (*it)->ILSrcDump(peLib);
     return true;
 }
-void DataContainer::ObjOut(PELib& peLib, int pass) const
-{
-    peLib.Out() << std::endl << "$db";
-    if (pass == 2)
-    {
-        for (auto field : fields_)
-            field->ObjOut(peLib, pass);
-    }
-    if (pass >= 2)
-    {
-        for (auto method : methods_)
-            method->ObjOut(peLib, pass);
-    }
-    for (auto child : children_)
-        child->ObjOut(peLib, pass);
-    peLib.Out() << std::endl << "$de";
-}
-void DataContainer::ObjIn(PELib& peLib, bool definition)
-{
-    peLib.PushContainer(this);
-    if (peLib.ObjBegin() != 'd')
-        peLib.ObjError(oe_syntax);
-    bool done = false;
-    while (!done)
-    {
-        switch (peLib.ObjBegin())
-        {
-            case 'n':
-                Add(Namespace::ObjIn(peLib));
-                break;
-            case 'E':
-                Add(Enum::ObjIn(peLib));
-                break;
-            case 'c':
-                Add(Class::ObjIn(peLib));
-                break;
-            case 'f':
-                Add(Field::ObjIn(peLib));
-                break;
-            case 'm':
-                Add(Method::ObjIn(peLib));
-                break;
-            default:
-                done = true;
-                break;
-        }
-    }
-    if (peLib.ObjEnd(false) != 'd')
-        peLib.ObjError(oe_syntax);
-    peLib.PopContainer();
-}
-bool DataContainer::PEDump(PELib& peLib)
+
+bool DataContainer::PEDump(Stream& peLib)
 {
     for (auto field : fields_)
         field->PEDump(peLib);
@@ -216,7 +166,7 @@ void DataContainer::Number(int& n)
     for (auto child : children_)
         child->Number(n);
 }
-void DataContainer::Compile(PELib& peLib)
+void DataContainer::Compile(Stream& peLib)
 {
     for (auto method : methods_)
         method->Compile(peLib);
@@ -229,21 +179,19 @@ void DataContainer::BaseTypes(int& types) const
         method->BaseTypes(types);
     for (auto child : children_)
         child->BaseTypes(types);
-    if (typeid(*this) != typeid(PELib))
+
+    if (typeid(*this) == typeid(Enum))
     {
-        if (typeid(*this) == typeid(Enum))
+        types |= basetypeEnum;
+    }
+    else
+    {
+        if (typeid(*this) != typeid(Namespace))
         {
-            types |= basetypeEnum;
-        }
-        else
-        {
-            if (typeid(*this) != typeid(Namespace))
-            {
-                if (flags_.Flags() & Qualifiers::Value)
-                    types |= basetypeValue;
-                else
-                    types |= basetypeObject;
-            }
+            if (flags_.Flags() & Qualifiers::Value)
+                types |= basetypeValue;
+            else
+                types |= basetypeObject;
         }
     }
 }

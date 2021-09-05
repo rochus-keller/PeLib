@@ -32,9 +32,9 @@
 namespace DotNetPELib
 {
     class Type;
-    class PELib;
     class Field;
     class MethodSignature;
+    class Stream;
     typedef unsigned char Byte; /* 1 byte */
 
     ///** a value, typically to be used as an operand
@@ -53,10 +53,8 @@ namespace DotNetPELib
         void Name(const std::string name) { name_ = name; }
 
         ///** internal functions
-        virtual bool ILSrcDump(PELib &) const;
-        virtual size_t Render(PELib &peLib, int opcode, int OperandType, Byte *);
-        virtual void ObjOut(PELib &, int pass) const;
-        static Value *ObjIn(PELib &, bool definition = true);
+        virtual bool ILSrcDump(Stream &) const;
+        virtual size_t Render(Stream &peLib, int opcode, int OperandType, Byte *);
     protected:
         std::string name_;
         Type *type_;
@@ -75,10 +73,8 @@ namespace DotNetPELib
         void IncrementUses() { uses_++; }
         int Uses() const { return uses_; }
         void Index(int Index) { index_ = Index; }
-        virtual bool ILSrcDump(PELib &) const override;
-        virtual size_t Render(PELib &peLib, int opcode, int OperandType, Byte *) override;
-        virtual void ObjOut(PELib &, int pass) const override;
-        static Local *ObjIn(PELib &, bool definition = true);
+        virtual bool ILSrcDump(Stream &) const override;
+        virtual size_t Render(Stream &peLib, int opcode, int OperandType, Byte *) override;
     private:
         int index_;
         int uses_;
@@ -97,10 +93,8 @@ namespace DotNetPELib
 
         // internal functions
         int Index() const { return index_; }
-        virtual bool ILSrcDump(PELib &) const override;
-        virtual size_t Render(PELib &peLib, int opcode, int OperandType, Byte *) override;
-        virtual void ObjOut(PELib &, int pass) const override;
-        static Param *ObjIn(PELib &, bool definition = true);
+        virtual bool ILSrcDump(Stream &) const override;
+        virtual size_t Render(Stream &peLib, int opcode, int OperandType, Byte *) override;
     private:
         int index_;
     };
@@ -117,10 +111,8 @@ namespace DotNetPELib
         Field *GetField() const { return field_; }
 
         // Internal functions
-        virtual bool ILSrcDump(PELib &) const override;
-        virtual size_t Render(PELib &peLib, int opcode, int OperandType, Byte *) override;
-        virtual void ObjOut(PELib &, int pass) const override;
-        static FieldName *ObjIn(PELib &, bool definition = true);
+        virtual bool ILSrcDump(Stream &) const override;
+        virtual size_t Render(Stream& peLib, int opcode, int OperandType, Byte *) override;
     protected:
         Field *field_;
     };
@@ -134,10 +126,8 @@ namespace DotNetPELib
         MethodSignature *Signature() const { return signature_; }
 
         // internal stuff
-        virtual bool ILSrcDump(PELib &) const override;
-        virtual size_t Render(PELib &peLib, int opcode, int OperandType, Byte *) override;
-        virtual void ObjOut(PELib &, int pass) const override;
-        static MethodName *ObjIn(PELib &, bool definition = true);
+        virtual bool ILSrcDump(Stream &) const override;
+        virtual size_t Render(Stream& peLib, int opcode, int OperandType, Byte *) override;
     protected:
         MethodSignature *signature_;
     };

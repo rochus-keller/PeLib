@@ -39,6 +39,7 @@ namespace DotNetPELib
     class CodeContainer;
     class AssemblyDef;
     class Class;
+    class Stream;
 
     /* a property, note we are only supporting classic properties here, not any
      * extensions that are allowed in the image file format
@@ -88,10 +89,8 @@ namespace DotNetPELib
         void Setter(Method *setter) { setter_ = setter; }
 
         // internal functions
-        virtual bool ILSrcDump(PELib &) const;
-        virtual bool PEDump(PELib &);
-        virtual void ObjOut(PELib &, int pass) const;
-        static Property *ObjIn(PELib &);
+        virtual bool ILSrcDump(Stream &) const;
+        virtual bool PEDump(Stream &);
     protected:
         void CreateFunctions(PELib &peLib, std::vector<Type *>& indices, bool hasSetter);
     private:

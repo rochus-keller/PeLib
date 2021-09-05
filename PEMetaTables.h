@@ -1,7 +1,8 @@
 /* Software License Agreement
  * 
  *     Copyright(C) 1994-2020 David Lindauer, (LADSoft)
- * 
+ *     With modifications by me@rochus-keller.ch (2021)
+ *
  *     This file is part of the Orange C Compiler package.
  * 
  *     The Orange C Compiler package is free software: you can redistribute it and/or modify
@@ -60,7 +61,6 @@ namespace DotNetPELib {
     class Method;
     class Field;
     class Type;
-    class PELib;
     class Property;
 
     class PEMethod;

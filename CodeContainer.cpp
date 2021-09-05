@@ -28,7 +28,7 @@
 #include "DataContainer.h"
 #include "Instruction.h"
 #include "PELibError.h"
-#include "PELib.h"
+#include "Stream.h"
 #include "Type.h"
 #include "Operand.h"
 #include "Value.h"
@@ -42,44 +42,14 @@ void CodeContainer::AddInstruction(Instruction* instruction)
         instructions_.push_back(instruction);
 }
 
-bool CodeContainer::ILSrcDump(PELib& peLib) const
+bool CodeContainer::ILSrcDump(Stream& peLib) const
 {
     for (auto instruction : instructions_)
         instruction->ILSrcDump(peLib);
     return true;
 }
-void CodeContainer::ObjOut(PELib& peLib, int pass) const
-{
-    if (pass == 3 && instructions_.size())
-    {
-        peLib.Out() << std::endl << "$Ib";
-        for (auto instruction : instructions_)
-            instruction->ObjOut(peLib, pass);
-        peLib.Out() << std::endl << "$Ie";
-    }
-}
-void CodeContainer::ObjIn(PELib& peLib)
-{
-    if (instructions_.size())
-    {
-        // duplicate public..   ignore the second instance
-        // peLib.ObjError(oe_syntax);
-        while (peLib.ObjBegin() == 'i')
-        {
-            Instruction::ObjIn(peLib);
-        }
-    }
-    else
-    {
-        while (peLib.ObjBegin() == 'i')
-        {
-            AddInstruction(Instruction::ObjIn(peLib));
-        }
-    }
-    if (peLib.ObjEnd(false) != 'I')
-        peLib.ObjError(oe_syntax);
-}
-Byte* CodeContainer::Compile(PELib& peLib, size_t& sz)
+
+Byte* CodeContainer::Compile(Stream& peLib, size_t& sz)
 {
     Byte* rv = nullptr;
     CalculateOffsets();
@@ -168,7 +138,7 @@ int CodeContainer::CompileSEH(std::vector<Instruction*> tags, int offset, std::v
     } while (offset < tags.size());
     return 1;
 }
-void CodeContainer::CompileSEH(PELib&, std::vector<SEHData>& sehData)
+void CodeContainer::CompileSEH(std::vector<SEHData>& sehData)
 {
     std::vector<Instruction*> tags;
     for (auto instruction : instructions_)
@@ -205,13 +175,13 @@ void CodeContainer::BaseTypes(int& types) const
         }
     }
 }
-void CodeContainer::Optimize(PELib& peLib)
+void CodeContainer::Optimize()
 {
     LoadLabels();
-    OptimizeLDC(peLib);
-    OptimizeLDLOC(peLib);
-    OptimizeLDARG(peLib);
-    OptimizeBranch(peLib);
+    OptimizeLDC();
+    OptimizeLDLOC();
+    OptimizeLDARG();
+    OptimizeBranch();
     labels.clear();
 }
 void CodeContainer::LoadLabels()
@@ -228,7 +198,7 @@ void CodeContainer::LoadLabels()
         }
     }
 }
-void CodeContainer::OptimizeLDC(PELib& peLib)
+void CodeContainer::OptimizeLDC()
 {
     for (auto instruction : instructions_)
     {
@@ -279,7 +249,7 @@ void CodeContainer::OptimizeLDC(PELib& peLib)
         }
     }
 }
-void CodeContainer::OptimizeLDLOC(PELib& peLib)
+void CodeContainer::OptimizeLDLOC()
 {
     for (auto instruction : instructions_)
     {
@@ -331,7 +301,7 @@ void CodeContainer::OptimizeLDLOC(PELib& peLib)
         }
     }
 }
-void CodeContainer::OptimizeLDARG(PELib& peLib)
+void CodeContainer::OptimizeLDARG()
 {
     for (auto instruction : instructions_)
     {
@@ -630,7 +600,7 @@ void CodeContainer::ValidateSEH()
         ValidateSEHEpilogues();
     }
 }
-void CodeContainer::OptimizeBranch(PELib& peLib)
+void CodeContainer::OptimizeBranch()
 {
     bool done = false;
     ValidateSEH();

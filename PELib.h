@@ -31,7 +31,7 @@
 #include <deque>
 #include <map>
 #include <list>
-
+#include "Stream.h"
 // reference changelog.txt to see what the changes are
 //
 #define DOTNETPELIB_VERSION "3.01"
@@ -143,7 +143,7 @@ namespace DotNetPELib
             // for pinvokes
             bits32 = 2
         };
-        enum OutputMode { ilasm, peexe, pedll, object };
+        enum OutputMode { ilasm, peexe, pedll };
 
         ///** Constructor, creates a working assembly
         PELib(const std::string& AssemblyName, int CoreFlags = PELib::ilonly | PELib::bits32 );
@@ -205,50 +205,24 @@ namespace DotNetPELib
         // loads the MSCorLib assembly
         AssemblyDef *MSCorLibAssembly();
 
-        std::string FormatName(const std::string& name);
+        bool ILSrcDump(const std::string& fileName);
 
-        std::string UnformatName();
-
-        bool ILSrcDump();
-
-        bool ObjOut();
-        longlong ObjInt();
-        int ObjHex2();
-        char ObjBegin(bool next = true);
-        char ObjEnd(bool next = true);
-        char ObjChar();
-        void ObjBack() { objInputPos_ -= 3; }
-        void ObjReset() { objInputPos_ = objInputCache_; }
-        void ObjError(int);
-        std::iostream &Out() const { return *outputStream_; }
-        void Swap(std::unique_ptr<std::iostream>& stream) { outputStream_.swap(stream); }
-        PEWriter &PEOut() const { return *peWriter_; }
-        std::map<size_t, size_t> moduleRefs;
-        void PushContainer(DataContainer *container) { containerStack_.push_back(container); }
-        DataContainer *GetContainer() { if (containerStack_.size()) return containerStack_.back(); else return nullptr; }
-        void PopContainer() { containerStack_.pop_back(); }
-        void SetCodeContainer(CodeContainer *container) { codeContainer_ = container; }
-        CodeContainer *GetCodeContainer() const { return codeContainer_; }
         Class* FindOrCreateGeneric(std::string name, std::deque<Type*>& generics);
 
         Byte* AllocateBytes(size_t sz);
     protected:
         void SplitPath(std::vector<std::string> & split, std::string path);
-        bool ILSrcDumpHeader();
-        bool ILSrcDumpFile();
+        bool ILSrcDumpHeader(Stream&);
+        bool ILSrcDumpFile(Stream&);
         bool DumpPEFile(std::string name, bool isexe, bool isgui);
         std::list<AssemblyDef *>assemblyRefs_;
         std::map<std::string, Method *>pInvokeSignatures_;
         std::multimap<std::string, MethodSignature *> pInvokeReferences_;
         std::string assemblyName_;
-        std::unique_ptr<std::iostream> outputStream_;
-        std::fstream *inputStream_;
         std::string fileName_;
     	std::map<std::string, std::string> unmanagedRoutines_;
         int corFlags_;
-        PEWriter *peWriter_;
         std::vector<Namespace *> usingList_;
-        std::deque<DataContainer *> containerStack_;
         CodeContainer *codeContainer_;
         const char *objInputBuf_;
         int objInputSize_;

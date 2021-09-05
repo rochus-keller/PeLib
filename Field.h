@@ -32,6 +32,7 @@
 namespace DotNetPELib
 {
     class Type;
+    class Stream;
     typedef unsigned char Byte; /* 1 byte */
     typedef long long longlong;
 
@@ -101,11 +102,9 @@ namespace DotNetPELib
 
         // internal functions
         bool InAssemblyRef() const;
-        static bool ILSrcDumpTypeName(PELib &peLib, ValueSize size);
-        virtual bool ILSrcDump(PELib &) const;
-        virtual bool PEDump(PELib &);
-        virtual void ObjOut(PELib &, int pass) const;
-        static Field *ObjIn(PELib &, bool definition = true);
+        static bool ILSrcDumpTypeName(Stream& peLib, ValueSize size);
+        virtual bool ILSrcDump(Stream &) const;
+        virtual bool PEDump(Stream &);
     protected:
         DataContainer *parent_;
         std::string name_;

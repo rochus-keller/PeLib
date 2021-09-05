@@ -33,7 +33,7 @@ namespace DotNetPELib
 {
     class DataContainer;
     class MethodSignature;
-    class PELib;
+    class Stream;
     typedef unsigned char Byte; /* 1 byte */
 
     ///** the type of a field or value
@@ -89,13 +89,11 @@ namespace DotNetPELib
         bool Matches(Type *right);
 
         // internal functions
-        virtual bool ILSrcDump(PELib &) const;
-        virtual size_t Render(PELib &, Byte *);
+        virtual bool ILSrcDump(Stream &) const;
+        virtual size_t Render(Stream&, Byte *);
         bool IsVoid() { return tp_ == Void && pointerLevel_ == 0; }
         size_t PEIndex() const { return peIndex_; }
         void PEIndex(size_t val) { peIndex_ = val; }
-        virtual void ObjOut(PELib &, int pass) const;
-        static Type *ObjIn(PELib &);
         bool Pinned() { return pinned_; }
         void Pinned(bool pinned) { pinned_ = pinned; }
     protected:
@@ -121,10 +119,8 @@ namespace DotNetPELib
         BoxedType(BasicType Tp) : Type(Tp, 0){}
 
         ///** internal functions
-        virtual bool ILSrcDump(PELib &) const override;
-        virtual size_t Render(PELib &, Byte *) override;
-        virtual void ObjOut(PELib &, int pass) const override;
-        static BoxedType *ObjIn(PELib &);
+        virtual bool ILSrcDump(Stream &) const override;
+        virtual size_t Render(Stream&, Byte *) override;
     private:
         static const char *typeNames_[];
     };

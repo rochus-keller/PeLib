@@ -31,6 +31,8 @@
 
 namespace DotNetPELib
 {
+    class Stream;
+
     ///** A special kind of class: enum
     class Enum : public Class
     {
@@ -43,13 +45,9 @@ namespace DotNetPELib
         Field *AddValue(const std::string& Name, longlong Value);
 
         // internal functions:
-        virtual bool ILSrcDump(PELib &) const override;
+        virtual bool ILSrcDump(Stream &) const override;
 
-        virtual bool PEDump(PELib &) override;
-
-        virtual void ObjOut(PELib &, int pass) const override;
-
-        static Enum *ObjIn(PELib &, bool definition = true);
+        virtual bool PEDump(Stream &) override;
 
     protected:
         Field::ValueSize size;

@@ -50,9 +50,6 @@ static PELib* s_this = 0;
 extern std::string DIR_SEP;
 PELib::PELib(const std::string& AssemblyName, int CoreFlags) :
     corFlags_(CoreFlags),
-    peWriter_(nullptr),
-    inputStream_(nullptr),
-    outputStream_(nullptr),
     codeContainer_(nullptr),
     objInputBuf_(nullptr),
     objInputSize_(0),
@@ -95,12 +92,10 @@ AssemblyDef* PELib::EmptyWorkingAssembly(const std::string& AssemblyName)
 bool PELib::DumpOutputFile(const std::string& file, OutputMode mode, bool gui)
 {
     bool rv;
-    outputStream_ = std::unique_ptr<std::iostream>( new std::fstream(file.c_str(), std::ios::in | std::ios::out | std::ios::trunc |
-                     (mode == ilasm || mode == object ? std::ios::in : std::ios::binary)) );
     switch (mode)
     {
         case ilasm:
-            rv = ILSrcDump();
+            rv = ILSrcDump(file);
             break;
         case peexe:
             rv = DumpPEFile(file, true, gui);
@@ -108,14 +103,10 @@ bool PELib::DumpOutputFile(const std::string& file, OutputMode mode, bool gui)
         case pedll:
             rv = DumpPEFile(file, false, gui);
             break;
-        case object:
-            rv = ObjOut();
-            break;
         default:
             rv = false;
             break;
     }
-    static_cast<std::fstream&>(*outputStream_).close();
     return rv;
 }
 AssemblyDef* PELib::AddExternalAssembly(const std::string& assemblyName, Byte* publicKeyToken)
@@ -489,178 +480,35 @@ PELib::eFindType PELib::Find(std::string path, Method **result, const std::vecto
         return s_method;
     }
 }
-bool PELib::ILSrcDumpHeader()
+bool PELib::ILSrcDumpHeader(Stream& s)
 {
-    *outputStream_ << ".corflags " << corFlags_ << std::endl << std::endl;
+    s.Out() << ".corflags " << corFlags_ << std::endl << std::endl;
     for (std::list<AssemblyDef*>::const_iterator it = assemblyRefs_.begin(); it != assemblyRefs_.end(); ++it)
     {
-        (*it)->ILHeaderDump(*this);
+        (*it)->ILHeaderDump(s);
     }
-    *outputStream_ << std::endl;
+    s.Out() << std::endl;
     return true;
 }
-bool PELib::ILSrcDumpFile()
+bool PELib::ILSrcDumpFile(Stream& s)
 {
-    WorkingAssembly()->ILSrcDump(*this);
+    WorkingAssembly()->ILSrcDump(s);
     for (auto sig : pInvokeSignatures_)
     {
-        sig.second->ILSrcDump(*this);
+        sig.second->ILSrcDump(s);
     }
     return true;
 }
-bool PELib::ObjOut()
-{
-    *outputStream_ << "$qb" << OBJECT_FILE_VERSION << "," << corFlags_;
-    for (auto a : assemblyRefs_)
-    {
-        // classes and namespaces
-        a->ObjOut(*this, 1);
-    }
-    for (auto p : pInvokeSignatures_)
-    {
-        // pinvoke signatures
-        p.second->ObjOut(*this, 2);
-    }
-    for (auto a : assemblyRefs_)
-    {
-        // method definitions and fields
-        a->ObjOut(*this, 2);
-    }
-    for (auto a : assemblyRefs_)
-    {
-        // method bodies
-        a->ObjOut(*this, 3);
-    }
-    *outputStream_ << "$qe";
-    return true;
-}
-int PELib::ObjHex2()
-{
-    char n1, n2;
-    n1 = ObjChar();
-    n1 = toupper(n1);
-    if (n1 < '0' || (n1 > '9' && n1 < 'A') || n1 > 'F')
-    {
-        objInputPos_--;
-        return -1;
-    }
-    n2 = ObjChar();
-    n2 = toupper(n2);
-    if (n2 < '0' || (n2 > '9' && n2 < 'A') || n2 > 'F')
-        ObjError(oe_syntax);
-    n1 -= '0';
-    if (n1 > 9)
-        n1 -= 'A' - ('9' + 1);
-    n2 -= '0';
-    if (n2 > 9)
-        n2 -= 'A' - ('9' + 1);
-    return (n1 << 4) + n2;
-}
-longlong PELib::ObjInt()
-{
-    char buf[256], *p = buf, ch;
-    bool minus = false;
-    if ((ch = ObjChar()) == '-')
-    {
-        minus = true;
-        ch = ObjChar();
-    }
-    while (isdigit(ch))
-    {
-        *p++ = ch;
-        ch = ObjChar();
-    }
-    objInputPos_--;
-    *p = 0;
-    longlong value = 0;
-    for (p = buf; *p; ++p)
-    {
-        value *= 10;
-        value += (*p - '0');
-    }
-    if (minus)
-        return -value;
-    else
-        return value;
-}
-char PELib::ObjBegin(bool next)
-{
-    if (!next)
-        objInputPos_ = objInputCache_;
-    else
-        objInputCache_ = objInputPos_;
-    char ch = ObjChar();
-    if (ch == '$')
-    {
 
-        if (objInputBuf_[objInputPos_ + 1] == 'b')
-        {
-
-            objInputPos_ += 2;
-            return objInputBuf_[objInputPos_ - 2];
-        }
-    }
-    objInputPos_--;
-    return -1;
-}
-char PELib::ObjEnd(bool next)
+bool PELib::ILSrcDump(const std::string& file)
 {
-    if (!next)
-        objInputPos_ = objInputCache_;
-    else
-        objInputCache_ = objInputPos_;
-    char ch = ObjChar();
-    if (ch == '$')
-    {
-        if (objInputBuf_[objInputPos_ + 1] == 'e')
-        {
-            objInputPos_ += 2;
-            return objInputBuf_[objInputPos_ - 2];
-        }
-    }
-    objInputPos_--;
-    return -1;
-}
-char PELib::ObjChar()
-{
-    while (isspace(objInputBuf_[objInputPos_]))
-        objInputPos_++;
-    if (objInputPos_ < objInputSize_)
-        return objInputBuf_[objInputPos_++];
-    return -1;
-}
-void PELib::ObjError(int errnum)
-{
-    static char buf[256];
-    sprintf(buf, "%d", errnum);
-    ObjectError a(buf);
-    throw a;
-}
-std::string PELib::UnformatName()
-{
-    int n1 = ObjHex2();
-    if (n1 < 0)
-        ObjError(oe_syntax);
-    int n2 = ObjHex2();
-    if (n2 < 0)
-        ObjError(oe_syntax);
-    n1 = (n1 << 8) + n2;
-
-    std::string nn(objInputBuf_ + objInputPos_, n1);
-    objInputPos_ += n1;
-    return nn;
+    Stream s(new std::fstream(file.c_str(), std::ios::in | std::ios::out | std::ios::trunc | std::ios::in) );
+    const bool res = ILSrcDumpHeader(s) && ILSrcDumpFile(s);
+    static_cast<std::fstream&>( s.Out() ).close();
+    return res;
 }
 
-bool PELib::ILSrcDump()
-{
-    return ILSrcDumpHeader() && ILSrcDumpFile();
-}
-std::string PELib::FormatName(const std::string& name)
-{
-    char buf[256];
-    sprintf(buf, "%04X", (unsigned)name.size());
-    return std::string(buf) + name;
-}
+
 AssemblyDef* PELib::FindAssembly(const std::string& assemblyName) const
 {
     for (std::list<AssemblyDef*>::const_iterator it = assemblyRefs_.begin(); it != assemblyRefs_.end(); ++it)
@@ -677,18 +525,18 @@ bool PELib::DumpPEFile(std::string file, bool isexe, bool isgui)
     int n = 1;
     WorkingAssembly()->Number(n);  // give initial PE Indexes for field resolution..
 
-    peWriter_ = new PEWriter(isexe, isgui, WorkingAssembly()->SNKFile());
+    PEWriter peWriter(isexe, isgui, WorkingAssembly()->SNKFile());
 
     // RK: Unhandled Exception on Mono 3 and 5:
     // System.TypeLoadException: Could not load type 'Module' from assembly 'test6, Version=0.0.0.0, Culture=neutral,
     // PublicKeyToken=null'.
     // [ERROR] FATAL UNHANDLED EXCEPTION: System.TypeLoadException: Could not load type 'Module' from assembly 'test6,
     // Version=0.0.0.0, Culture=neutral, PublicKeyToken=null'.
-    size_t moduleIndex = peWriter_->HashString("<Module>"); // RK fix: "<Module>" instead of "Module" fixes the issue
+    size_t moduleIndex = peWriter.HashString("<Module>"); // RK fix: "<Module>" instead of "Module" fixes the issue
 
     TypeDefOrRef typeDef(TypeDefOrRef::TypeDef, 0);
     TableEntryBase* table = new TypeDefTableEntry(0, moduleIndex, 0, typeDef, 1, 1);
-    peWriter_->AddTableEntry(table);
+    peWriter.AddTableEntry(table);
 
     int types = 0;
     WorkingAssembly()->BaseTypes(types);
@@ -702,23 +550,24 @@ bool PELib::DumpPEFile(std::string file, bool isexe, bool isgui)
     size_t enumIndex = 0;
     if (types)
     {
-        systemIndex = peWriter_->HashString("System");
+        systemIndex = peWriter.HashString("System");
         if (types & DataContainer::basetypeObject)
         {
-            objectIndex = peWriter_->HashString("Object");
+            objectIndex = peWriter.HashString("Object");
         }
         if (types & DataContainer::basetypeValue)
         {
-            valueIndex = peWriter_->HashString("ValueType");
+            valueIndex = peWriter.HashString("ValueType");
         }
         if (types & DataContainer::basetypeEnum)
         {
-            enumIndex = peWriter_->HashString("Enum");
+            enumIndex = peWriter.HashString("Enum");
         }
     }
+    Stream s(&peWriter,this);
     for (auto assemblyRef : assemblyRefs_)
     {
-        assemblyRef->PEHeaderDump(*this);
+        assemblyRef->PEHeaderDump(s);
     }
     if (types)
     {
@@ -729,7 +578,7 @@ bool PELib::DumpPEFile(std::string file, bool isexe, bool isgui)
         {
             Resource* result = nullptr;
             table = new TypeRefTableEntry(rs, objectIndex, systemIndex);
-            objectIndex = peWriter_->AddTableEntry(table);
+            objectIndex = peWriter.AddTableEntry(table);
             Find("[mscorlib]System::Object", &result);
             if (result)
                 static_cast<Class*>(result)->PEIndex(objectIndex);
@@ -738,7 +587,7 @@ bool PELib::DumpPEFile(std::string file, bool isexe, bool isgui)
         {
             Resource* result = nullptr;
             table = new TypeRefTableEntry(rs, valueIndex, systemIndex);
-            valueIndex = peWriter_->AddTableEntry(table);
+            valueIndex = peWriter.AddTableEntry(table);
             Find("[mscorlib]System::ValueType", &result);
             if (result)
                 static_cast<Class*>(result)->PEIndex(valueIndex);
@@ -747,33 +596,35 @@ bool PELib::DumpPEFile(std::string file, bool isexe, bool isgui)
         {
             Resource* result = nullptr;
             table = new TypeRefTableEntry(rs, enumIndex, systemIndex);
-            enumIndex = peWriter_->AddTableEntry(table);
+            enumIndex = peWriter.AddTableEntry(table);
             Find("[mscorlib]System::Enum", &result);
             if (result)
                 static_cast<Class*>(result)->PEIndex(enumIndex);
         }
-        peWriter_->SetBaseClasses(objectIndex, valueIndex, enumIndex, systemIndex);
+        peWriter.SetBaseClasses(objectIndex, valueIndex, enumIndex, systemIndex);
     }
     size_t npos = file.find_last_of("\\");
     if (npos != std::string::npos && npos != file.size() - 1)
         file = file.substr(npos + 1);
-    size_t nameIndex = peWriter_->HashString(file);
+    size_t nameIndex = peWriter.HashString(file);
     Byte guid[128 / 8];
-    peWriter_->CreateGuid(guid);
-    size_t guidIndex = peWriter_->HashGUID(guid);
+    peWriter.CreateGuid(guid);
+    size_t guidIndex = peWriter.HashGUID(guid);
     table = new ModuleTableEntry(nameIndex, guidIndex);
-    peWriter_->AddTableEntry(table);
+    peWriter.AddTableEntry(table);
 
     for (auto signature : pInvokeSignatures_)
     {
-        signature.second->PEDump(*this);
+        signature.second->PEDump(s);
     }
-    bool rv = WorkingAssembly()->PEDump(*this);
-    WorkingAssembly()->Compile(*this);
-    peWriter_->WriteFile(GetCorFlags(), *outputStream_);
-    delete peWriter_;
+    bool rv = WorkingAssembly()->PEDump(s);
+    WorkingAssembly()->Compile(s);
+
+    std::fstream out(file.c_str(), std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary);
+    peWriter.WriteFile(GetCorFlags(), out);
     return rv;
 }
+
 AssemblyDef* PELib::MSCorLibAssembly()
 {
     // [mscorlib]System.ParamArrayAttribute
