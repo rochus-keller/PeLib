@@ -25,7 +25,8 @@
 
 #include "Namespace.h"
 #include "PELibError.h"
-#include "PEFile.h"
+#include "PELib.h"
+#include "PEWriter.h"
 namespace DotNetPELib
 {
 

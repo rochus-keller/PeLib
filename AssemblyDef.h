@@ -70,7 +70,7 @@ namespace DotNetPELib
 
         void SetLoaded() { loaded_ = true; }
 
-        bool ILHeaderDump(PELib &);
+        bool ILHeaderDump(PELib& peLib);
 
         bool PEHeaderDump(PELib &);
 

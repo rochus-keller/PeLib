@@ -24,11 +24,12 @@
  */
 
 #include "AssemblyDef.h"
-#include "PEFile.h"
+#include "PEWriter.h"
 #include "Namespace.h"
 #include "Class.h"
 #include "Enum.h"
 #include "PELibError.h"
+#include "PELib.h"
 #include "sha1.h"
 #include <climits>
 namespace DotNetPELib

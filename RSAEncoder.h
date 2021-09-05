@@ -1,6 +1,7 @@
-#include "PELib.h"
 #include "bigdigits.h"
 namespace DotNetPELib {
+
+typedef unsigned char Byte; /* 1 byte */
 
 class ByteArray
 {

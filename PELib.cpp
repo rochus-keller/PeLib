@@ -25,8 +25,7 @@
 
 #include "PELib.h"
 #include "Callback.h"
-#include "PEFile.h"
-#include "DLLExportReader.h"
+#include "PEWriter.h"
 #include "AssemblyDef.h"
 #include "Method.h"
 #include "MethodSignature.h"
@@ -39,6 +38,7 @@
 #include "Property.h"
 #include "PELibError.h"
 #include <cassert>
+#include <fstream>
 
 #define OBJECT_FILE_VERSION "100"
 
@@ -100,7 +100,7 @@ bool PELib::DumpOutputFile(const std::string& file, OutputMode mode, bool gui)
     switch (mode)
     {
         case ilasm:
-            rv = ILSrcDump(*this);
+            rv = ILSrcDump();
             break;
         case peexe:
             rv = DumpPEFile(file, true, gui);
@@ -650,6 +650,11 @@ std::string PELib::UnformatName()
     objInputPos_ += n1;
     return nn;
 }
+
+bool PELib::ILSrcDump()
+{
+    return ILSrcDumpHeader() && ILSrcDumpFile();
+}
 std::string PELib::FormatName(const std::string& name)
 {
     char buf[256];
@@ -765,7 +770,7 @@ bool PELib::DumpPEFile(std::string file, bool isexe, bool isgui)
     }
     bool rv = WorkingAssembly()->PEDump(*this);
     WorkingAssembly()->Compile(*this);
-    peWriter_->WriteFile(*this, *outputStream_);
+    peWriter_->WriteFile(GetCorFlags(), *outputStream_);
     delete peWriter_;
     return rv;
 }
@@ -792,20 +797,5 @@ AssemblyDef* PELib::MSCorLibAssembly()
     return mscorlibAssembly;
 }
 
-
-std::string PELib::FindUnmanagedName(const std::string& name) { return unmanagedRoutines_[name]; }
-void PELib::Traverse(Callback& callback) const
-{
-    for (auto a : assemblyRefs_)
-    {
-        if (callback.EnterAssembly(a))
-        {
-            if (!a->Traverse(callback))
-                break;
-            if (!callback.ExitAssembly(a))
-                break;
-        }
-    }
-}
 
 }  // namespace DotNetPELib

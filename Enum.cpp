@@ -24,9 +24,11 @@
  */
 
 #include "Enum.h"
-#include "PEFile.h"
+#include "PELib.h"
+#include "PEWriter.h"
 #include "Type.h"
 #include "PELibError.h"
+#include "SignatureGenerator.h"
 
 namespace DotNetPELib
 {

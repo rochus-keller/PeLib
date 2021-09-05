@@ -24,7 +24,8 @@
  */
 
 #include "Method.h"
-#include "PEFile.h"
+#include "PELib.h"
+#include "PEWriter.h"
 #include "MethodSignature.h"
 #include "Value.h"
 #include "Type.h"
@@ -37,6 +38,8 @@
 #include <set>
 #include <typeinfo>
 #include <algorithm>
+#include "SignatureGenerator.h"
+
 namespace DotNetPELib
 {
 Method::Method(MethodSignature* Prototype, Qualifiers flags, bool entry) :

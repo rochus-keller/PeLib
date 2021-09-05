@@ -24,13 +24,16 @@
  */
 
 #include "Type.h"
-#include "PEFile.h"
+#include "PEWriter.h"
 #include "DataContainer.h"
 #include "Class.h"
 #include "MethodSignature.h"
 #include "Enum.h"
 #include "PELibError.h"
+#include "PELib.h"
 #include <stdio.h>
+#include "SignatureGenerator.h"
+
 namespace DotNetPELib
 {
 

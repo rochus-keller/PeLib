@@ -22,10 +22,10 @@
  *
  */
 
+#include "PEWriter.h"
+#include "PEWriter_Private.h"
 #include "PELibError.h"
-#include "PEFile.h"
-#include "MZHeader.h"
-#include "PEHeader.h"
+#include "SignatureGenerator.h"
 #include <time.h>
 #include <stdio.h>
 #include <iostream>
@@ -87,7 +87,7 @@ size_t PEMethod::Write(size_t sizes[MaxTables + ExtraIndexes], std::iostream& ou
         int end = 0;
         while (end < sehData_.size())
         {
-            const CodeContainer::SEHData& edata = sehData_[end];
+            const SEHData& edata = sehData_[end];
             bool etiny =
                 edata.tryOffset < 65536 && edata.tryLength < 256 && edata.handlerOffset < 65536 && edata.handlerLength < 256;
             if (!etiny)
@@ -105,7 +105,7 @@ size_t PEMethod::Write(size_t sizes[MaxTables + ExtraIndexes], std::iostream& ou
             n += 4;
             for (int i = 0; i < sehData_.size(); i++)
             {
-                const CodeContainer::SEHData& data = sehData_[i];
+                const SEHData& data = sehData_[i];
                 Byte bytes[12];
                 bytes[0] = data.flags;
                 bytes[1] = 0;
@@ -115,7 +115,7 @@ size_t PEMethod::Write(size_t sizes[MaxTables + ExtraIndexes], std::iostream& ou
                 bytes[5] = data.handlerOffset & 0xff;
                 bytes[6] = (data.handlerOffset >> 8) & 0xff;
                 bytes[7] = data.handlerLength;
-                if (data.flags & CodeContainer::SEHData::Filter)
+                if (data.flags & SEHData::Filter)
                 {
                     bytes[8] = data.filterOffset & 0xff;
                     bytes[9] = (data.filterOffset >> 8) & 0xff;
@@ -145,7 +145,7 @@ size_t PEMethod::Write(size_t sizes[MaxTables + ExtraIndexes], std::iostream& ou
             n += 4;
             for (int i = 0; i < sehData_.size(); i++)
             {
-                const CodeContainer::SEHData& data = sehData_[i];
+                const SEHData& data = sehData_[i];
                 Byte bytes[24];
                 bytes[0] = data.flags;
                 bytes[1] = 0;
@@ -167,7 +167,7 @@ size_t PEMethod::Write(size_t sizes[MaxTables + ExtraIndexes], std::iostream& ou
                 bytes[17] = (data.handlerLength >> 8) & 0xff;
                 bytes[18] = (data.handlerLength >> 16) & 0xff;
                 bytes[19] = (data.handlerLength >> 24) & 0xff;
-                if (data.flags & CodeContainer::SEHData::Filter)
+                if (data.flags & SEHData::Filter)
                 {
                     bytes[20] = data.filterOffset & 0xff;
                     bytes[21] = (data.filterOffset >> 8) & 0xff;
@@ -334,7 +334,16 @@ size_t PEWriter::RVABytes(Byte* Bytes, size_t dataLen)
     return rv;
 }
 
-void PEWriter::CalculateObjects(PELib& peLib)
+void PEWriter::SetBaseClasses(size_t ObjectIndex, size_t ValueIndex, size_t EnumIndex, size_t SystemIndex)
+{
+    SignatureGenerator::SetObjectType(ObjectIndex);
+    objectBase_ = ObjectIndex;
+    valueBase_ = ValueIndex;
+    enumBase_ = EnumIndex;
+    systemIndex_ = SystemIndex;
+}
+
+void PEWriter::CalculateObjects(int corFlags)
 {
     peHeader_ = new PEHeader;
     memset(peHeader_, 0, sizeof(PEHeader));
@@ -399,7 +408,7 @@ void PEWriter::CalculateObjects(PELib& peLib)
     cor20Header_->MinorRuntimeVersion = 5;
     // standard CIL expects ONLY bit 0, we are using bit 1 as well
     // for interoperability with the microsoft runtimes
-    cor20Header_->Flags = peLib.GetCorFlags();
+    cor20Header_->Flags = corFlags;
     cor20Header_->EntryPointToken = entryPoint_;
 
     if (snkFile_.size())
@@ -452,10 +461,10 @@ void PEWriter::CalculateObjects(PELib& peLib)
                 if (currentRVA % 4)
                     currentRVA += 4 - currentRVA % 4;
                 int end = 0;
-                const CodeContainer::SEHData& data = method->sehData_[end];
+                const SEHData& data = method->sehData_[end];
                 while (end < method->sehData_.size())
                 {
-                    const CodeContainer::SEHData& edata = method->sehData_[end];
+                    const SEHData& edata = method->sehData_[end];
                     bool etiny = edata.tryOffset < 65536 && edata.tryLength < 256 && edata.handlerOffset < 65536 &&
                                  edata.handlerLength < 256;
                     if (!etiny)
@@ -687,18 +696,18 @@ void PEWriter::HashPartOfFile(SHA1Context& context, size_t offset, size_t len)
         sz += l;
     }
 }
-bool PEWriter::WriteFile(PELib& peLib, std::iostream& out)
+bool PEWriter::WriteFile(int corFlags, std::iostream& out)
 {
     outputFile_ = &out;
     if (!entryPoint_ && !DLL_)
         throw PELibError(PELibError::MissingEntryPoint);
-    CalculateObjects(peLib);
-    bool rv = WriteMZData(peLib) && WritePEHeader(peLib) && WritePEObjects(peLib) && WriteIAT(peLib) && WriteCoreHeader(peLib) &&
-              WriteStaticData(peLib) && WriteMethods(peLib) && WriteMetadataHeaders(peLib) && WriteTables(peLib) &&
-              WriteStrings(peLib) && WriteUS(peLib) && WriteGUID(peLib) && WriteBlob(peLib) && WriteImports(peLib) &&
-              WriteEntryPoint(peLib) && WriteHashData(peLib) &&
+    CalculateObjects(corFlags);
+    bool rv = WriteMZData() && WritePEHeader() && WritePEObjects() && WriteIAT() && WriteCoreHeader() &&
+              WriteStaticData() && WriteMethods() && WriteMetadataHeaders() && WriteTables() &&
+              WriteStrings() && WriteUS() && WriteGUID() && WriteBlob() && WriteImports() &&
+              WriteEntryPoint() && WriteHashData() &&
               //        WriteVersionInfo(peLib) &&
-              WriteRelocs(peLib);
+              WriteRelocs();
     if (rv && snkLen_)
     {
         SHA1Context context;
@@ -754,23 +763,23 @@ void PEWriter::align(size_t algn) const
         put(buf, n);
     }
 }
-bool PEWriter::WriteMZData(PELib& peLib) const
+bool PEWriter::WriteMZData() const
 {
     put(MZHeader_, sizeof(MZHeader_));
     return true;
 }
-bool PEWriter::WritePEHeader(PELib& peLib)
+bool PEWriter::WritePEHeader()
 {
     peBase_ = outputFile_->tellp();
     put(peHeader_, sizeof(PEHeader));
     return true;
 }
-bool PEWriter::WritePEObjects(PELib& peLib) const
+bool PEWriter::WritePEObjects() const
 {
     put(peObjects_, sizeof(PEObject) * peHeader_->num_objects);
     return true;
 }
-bool PEWriter::WriteIAT(PELib& peLib) const
+bool PEWriter::WriteIAT() const
 {
     align(fileAlign_);
     DWord n = peHeader_->import_rva;
@@ -782,13 +791,13 @@ bool PEWriter::WriteIAT(PELib& peLib) const
     put(&n, sizeof(n));
     return true;
 }
-bool PEWriter::WriteCoreHeader(PELib& peLib)
+bool PEWriter::WriteCoreHeader()
 {
     corBase_ = outputFile_->tellp();
     put(cor20Header_, sizeof(DotNetCOR20Header));
     return true;
 }
-bool PEWriter::WriteHashData(PELib& peLib)
+bool PEWriter::WriteHashData()
 {
     snkBase_ = outputFile_->tellp();
     if (snkLen_)
@@ -799,7 +808,7 @@ bool PEWriter::WriteHashData(PELib& peLib)
     }
     return true;
 }
-bool PEWriter::WriteMethods(PELib& peLib) const
+bool PEWriter::WriteMethods() const
 {
     size_t counts[MaxTables + ExtraIndexes];
     memset(counts, 0, sizeof(counts));
@@ -825,7 +834,7 @@ bool PEWriter::WriteMethods(PELib& peLib) const
     }
     return true;
 }
-bool PEWriter::WriteMetadataHeaders(PELib& peLib) const
+bool PEWriter::WriteMetadataHeaders() const
 {
     align(4);
     put(metaHeader_, sizeof(DotNetMetaHeader));
@@ -848,7 +857,7 @@ bool PEWriter::WriteMetadataHeaders(PELib& peLib) const
     }
     return true;
 }
-bool PEWriter::WriteTables(PELib& peLib) const
+bool PEWriter::WriteTables() const
 {
     size_t counts[MaxTables + ExtraIndexes];
     memset(counts, 0, sizeof(counts));
@@ -882,13 +891,13 @@ bool PEWriter::WriteTables(PELib& peLib) const
     //    put(&n, sizeof(n));
     return true;
 }
-bool PEWriter::WriteStrings(PELib& peLib) const
+bool PEWriter::WriteStrings() const
 {
     put(strings_.base, strings_.size);
     align(4);
     return true;
 }
-bool PEWriter::WriteUS(PELib& peLib) const
+bool PEWriter::WriteUS() const
 {
     if (us_.size == 0)
     {
@@ -901,19 +910,19 @@ bool PEWriter::WriteUS(PELib& peLib) const
     align(4);
     return true;
 }
-bool PEWriter::WriteGUID(PELib& peLib) const
+bool PEWriter::WriteGUID() const
 {
     put(guid_.base, guid_.size);
     align(4);
     return true;
 }
-bool PEWriter::WriteBlob(PELib& peLib) const
+bool PEWriter::WriteBlob() const
 {
     put(blob_.base, blob_.size);
     align(4);
     return true;
 }
-bool PEWriter::WriteImports(PELib& peLib) const
+bool PEWriter::WriteImports() const
 {
     PEImportDir dir[2];
     memset(&dir, 0, sizeof(dir));
@@ -940,7 +949,7 @@ bool PEWriter::WriteImports(PELib& peLib) const
     align(4);
     return true;
 }
-bool PEWriter::WriteEntryPoint(PELib& peLib) const
+bool PEWriter::WriteEntryPoint() const
 {
     DWord n = 0;
     put(&n, 2);
@@ -951,7 +960,7 @@ bool PEWriter::WriteEntryPoint(PELib& peLib) const
     return true;
 }
 
-bool PEWriter::WriteStaticData(PELib& peLib) const
+bool PEWriter::WriteStaticData() const
 {
     if (rva_.size)
     {
@@ -982,7 +991,7 @@ void PEWriter::VersionString(const wchar_t* name, const char* value) const
     put(buf, n1 * 2);
     align(4);
 }
-bool PEWriter::WriteVersionInfo(PELib& peLib) const
+bool PEWriter::WriteVersionInfo(const std::string& fileName) const
 {
     align(fileAlign_);
     PEResourceDirTable resTable;
@@ -1053,7 +1062,7 @@ bool PEWriter::WriteVersionInfo(PELib& peLib) const
     size_t n = language_ << 16;
     put(&n, sizeof(DWord));
 
-    std::string nn = peLib.FileName();
+    std::string nn = fileName;
     n = nn.find_last_of("\\");
     if (n != std::string::npos)
     {
@@ -1094,7 +1103,7 @@ bool PEWriter::WriteVersionInfo(PELib& peLib) const
     VersionString(L"Assembly Version", versions[2]);
     return true;
 }
-bool PEWriter::WriteRelocs(PELib& peLib) const
+bool PEWriter::WriteRelocs() const
 {
     align(fileAlign_);
     DWord n = peHeader_->entry_point + 2;

@@ -24,11 +24,14 @@
  */
 
 #include "Field.h"
-#include "PEFile.h"
+#include "PELib.h"
+#include "PEWriter.h"
 #include "DataContainer.h"
 #include "Type.h"
 #include "PELibError.h"
 #include <iomanip>
+#include "SignatureGenerator.h"
+
 namespace DotNetPELib
 {
 void Field::AddEnumValue(longlong Value, ValueSize Size)

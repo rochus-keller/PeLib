@@ -31,6 +31,7 @@
 #include <map>
 #include <vector>
 #include <list>
+#include "SEHData.h"
 
 namespace DotNetPELib
 {
@@ -83,25 +84,6 @@ namespace DotNetPELib
         ///** set/get parent
         void SetContainer(DataContainer *parent) { parent_ = parent; }
         DataContainer *GetContainer() const { return parent_; }
-
-        struct SEHData
-        {
-            enum {
-                Exception = 0,
-                Filter = 1,
-                Finally = 2,
-                Fault = 4
-            } flags;
-            size_t tryOffset;
-            size_t tryLength;
-            size_t handlerOffset;
-            size_t handlerLength;
-            union
-            {
-                size_t filterOffset;
-                size_t classToken;
-            };
-        };
 
         // some internal functions
         bool InAssemblyRef() const;

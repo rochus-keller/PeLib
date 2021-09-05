@@ -24,9 +24,10 @@
  */
 
 #include "Value.h"
-#include "PEFile.h"
+#include "PEWriter.h"
 #include "Type.h"
 #include "PELibError.h"
+#include "PELib.h"
 #include "Instruction.h"
 #include "Field.h"
 #include "DataContainer.h"

@@ -25,7 +25,8 @@
 
 #include "Class.h"
 #include "Callback.h"
-#include "PEFile.h"
+#include "PEWriter.h"
+#include "PELib.h"
 #include "Property.h"
 #include "Type.h"
 #include "PELibError.h"
@@ -35,6 +36,7 @@
 #include <typeinfo>
 #include <climits>
 #include <sstream>
+#include "SignatureGenerator.h"
 
 namespace DotNetPELib
 {

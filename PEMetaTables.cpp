@@ -23,9 +23,7 @@
  */
 
 #include "PELib.h"
-#include "PEFile.h"
-#include "MZHeader.h"
-#include "PEHeader.h"
+#include "PEWriter.h"
 #include <time.h>
 #include <stdio.h>
 namespace DotNetPELib

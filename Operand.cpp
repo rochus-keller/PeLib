@@ -24,7 +24,8 @@
  */
 
 #include "Operand.h"
-#include "PEFile.h"
+#include "PELib.h"
+#include "PEWriter.h"
 #include "Operand.h"
 #include "Value.h"
 #include "Instruction.h"

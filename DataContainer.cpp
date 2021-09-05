@@ -25,7 +25,9 @@
 
 #include "DataContainer.h"
 #include "Callback.h"
-#include "PEFile.h"
+#include "PEMetaTables.h"
+#include "PELib.h"
+#include "PEWriter.h"
 #include "Field.h"
 #include "Namespace.h"
 #include "Class.h"

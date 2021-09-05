@@ -105,6 +105,8 @@
 
 namespace DotNetPELib {
 
+typedef long long longlong;
+
     struct PEHeader
     {
         int signature;

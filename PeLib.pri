@@ -15,14 +15,9 @@ CONFIG += c++11
 HEADERS += \
     $$PWD/bigdigits.h \
     $$PWD/bigdtypes.h \
-    $$PWD/DLLExportReader.h \
     $$PWD/PELib.h \
-    $$PWD/MZHeader.h \
-    $$PWD/PEFile.h \
     $$PWD/RSAEncoder.h \
-    $$PWD/PEHeader.h \
     $$PWD/sha1.h \
-    $$PWD/targetver.h \
     $$PWD/Qualifiers.h \
     $$PWD/PELibError.h \
     $$PWD/CodeContainer.h \
@@ -42,8 +37,12 @@ HEADERS += \
     $$PWD/Type.h \
     $$PWD/Callback.h \
     $$PWD/Resource.h \
-    $$PWD/PublicApi.h \
-    $$PWD/SimpleApi.h
+    $$PWD/PublicApi.h \ 
+    $$PWD/PEWriter.h \
+    $$PWD/SignatureGenerator.h \
+    $$PWD/PEMetaTables.h \
+    $$PWD/SEHData.h \
+    $$PWD/PEWriter_Private.h
 
 SOURCES += \
     $$PWD/AssemblyDef.cpp \
@@ -53,16 +52,14 @@ SOURCES += \
     $$PWD/CreateGUID.cpp \
     $$PWD/CustomAttributeContainer.cpp \
     $$PWD/DataContainer.cpp \
-    $$PWD/DLLExportReader.cpp \
     $$PWD/Enum.cpp \
     $$PWD/Field.cpp \
     $$PWD/Instruction.cpp \
     $$PWD/Method.cpp \
     $$PWD/MethodSignature.cpp \
     $$PWD/Namespace.cpp \
-    $$PWD/NetSignature.cpp \
+    $$PWD/SignatureGenerator.cpp \
     $$PWD/Operand.cpp \
-    $$PWD/PECor20Headers.cpp \
     $$PWD/PELib.cpp \
     $$PWD/PELibError.cpp \
     $$PWD/PEWriter.cpp \
@@ -72,5 +69,5 @@ SOURCES += \
     $$PWD/sha1.cpp \
     $$PWD/Type.cpp \
     $$PWD/Value.cpp \
-    $$PWD/Resource.cpp \
-    $$PWD/SimpleApi.cpp
+    $$PWD/Resource.cpp \ 
+    $$PWD/PEMetaTables.cpp

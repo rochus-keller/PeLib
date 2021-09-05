@@ -3093,7 +3093,7 @@ done:
 /**	Computes y = x^e mod m in constant time using Coron's algorithm */
 int mpModExp_ct(DIGIT_T yout[], const DIGIT_T x[], const DIGIT_T e[], DIGIT_T m[], size_t ndigits)
 {
-    /* Algorithm: Coron’s exponentiation (left-to-right)
+    /* Algorithm: CoronÂ’s exponentiation (left-to-right)
      * Square-and-multiply resistant against simple power attacks (SPA)
      * Ref: Jean-Sebastian Coron, "Resistance Against Differential Power Analysis for
      * Elliptic Curve Cryptosystems", August 1999.

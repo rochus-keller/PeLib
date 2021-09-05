@@ -165,9 +165,6 @@ namespace DotNetPELib
         // set the paths where assemblies are looked for. More than one path can be separated by ';'.
         void SetLibPath( const std::string& paths );
 
-        ///** find an unmanaged dll name
-        std::string FindUnmanagedName(const std::string& name);
-
         ///** Find an assembly (in the already loaded set)
         AssemblyDef *FindAssembly(const std::string& assemblyName) const;
 
@@ -212,7 +209,7 @@ namespace DotNetPELib
 
         std::string UnformatName();
 
-        virtual bool ILSrcDump(PELib &) { return ILSrcDumpHeader() && ILSrcDumpFile(); }
+        bool ILSrcDump();
 
         bool ObjOut();
         longlong ObjInt();

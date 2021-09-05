@@ -23,6 +23,7 @@
  *
  */
 
+#include "SignatureGenerator.h"
 #include "Type.h"
 #include "Class.h"
 #include "MethodSignature.h"
@@ -31,9 +32,8 @@
 #include "Field.h"
 #include "Property.h"
 #include "Method.h"
-#include "PEFile.h"
+#include "PEMetaTables.h"
 
-// TODO: separate SignatureGenerator h/cpp
 
 namespace DotNetPELib
 {

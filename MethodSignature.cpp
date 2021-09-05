@@ -24,7 +24,8 @@
  */
 
 #include "MethodSignature.h"
-#include "PEFile.h"
+#include "PELib.h"
+#include "PEWriter.h"
 #include "Type.h"
 #include "Value.h"
 #include "PELibError.h"
@@ -34,6 +35,7 @@
 #include "AssemblyDef.h"
 #include <stdio.h>
 #include <sstream>
+#include "SignatureGenerator.h"
 
 namespace DotNetPELib
 {

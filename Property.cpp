@@ -32,9 +32,11 @@
 #include "Instruction.h"
 #include "Operand.h"
 #include "PELibError.h"
-#include "PEFile.h"
+#include "PELib.h"
+#include "PEWriter.h"
 #include <typeinfo>
 #include <sstream>
+#include "SignatureGenerator.h"
 
 namespace DotNetPELib
 {

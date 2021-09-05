@@ -24,10 +24,11 @@
  */
 
 #include "CodeContainer.h"
-#include "PEFile.h"
+#include "PEWriter.h"
 #include "DataContainer.h"
 #include "Instruction.h"
 #include "PELibError.h"
+#include "PELib.h"
 #include "Type.h"
 #include "Operand.h"
 #include "Value.h"
