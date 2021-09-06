@@ -30,6 +30,9 @@
 #include <time.h>
 #include <stdio.h>
 #include <iostream>
+#ifdef QT_CORE_LIB
+#include <QtDebug>
+#endif
 
 namespace DotNetPELib
 {
@@ -55,6 +58,26 @@ DotNetMetaHeader* PEWriter::metaHeader_ = &metaHeader1;
 DWord PEWriter::cildata_rva_;
 Byte PEWriter::defaultUS_[8] = {0, 3, 0x20, 0, 0};
 
+PEMethod::PEMethod(bool hasSEH, int Flags, size_t MethodDef, int MaxStack,
+                   int localCount, int CodeSize, size_t signature)
+    : flags_(Flags), hdrSize_(3), maxStack_(MaxStack), codeSize_(CodeSize), code_(nullptr), signatureToken_(signature), rva_(0), methodDef_(MethodDef)
+{
+    //static int count = 0;
+    //count++;
+    //qDebug() << "created" << count;
+    if ((flags_ & 0xfff) == 0)
+    {
+        if (maxStack_ <= 8 && codeSize_ < 64 && localCount == 0 && !hasSEH)
+        {
+            flags_ = flags_ | (int)TinyFormat;
+        }
+        else
+        {
+            flags_ = flags_ | (int)FatFormat;
+        }
+    }
+}
+
 size_t PEMethod::Write(size_t sizes[MaxTables + ExtraIndexes], std::iostream& out) const
 {
     Byte dest[512];
@@ -73,7 +96,11 @@ size_t PEMethod::Write(size_t sizes[MaxTables + ExtraIndexes], std::iostream& ou
         *(DWord*)(dest + 8) = signatureToken_;
     }
     out.write((char*)dest, n);
-    out.write((char*)code_, codeSize_);
+    if( code_ == 0 ) // TODO: is this a legal state?
+        out.write( std::string(codeSize_,0).c_str(), codeSize_); // TODO: provisoric solution to avoid crash
+    else
+        out.write((char*)code_, codeSize_);
+    //qDebug() << "write\t" << who.c_str() << "\t" << (code_ != 0);
     n += codeSize_;
     if (sehData_.size())
     {
@@ -251,14 +278,14 @@ size_t PEWriter::HashString(const std::string& utf8)
     stringMap_[utf8] = rv;
     return rv;
 }
-size_t PEWriter::HashUS(std::wstring str)
+size_t PEWriter::HashUS(wchar_t* str, int len)
 {
     if (us_.size == 0)
         us_.size++;
     int flag = 0;
-    us_.Ensure(str.size() * 2 + 5);
+    us_.Ensure(len * 2 + 5);
     size_t rv = us_.size;
-    int blobLen = str.size() * 2 + 1;
+    int blobLen = len * 2 + 1;
     if (blobLen < 0x80)
     {
         us_.base[us_.size++] = blobLen;
@@ -276,7 +303,7 @@ size_t PEWriter::HashUS(std::wstring str)
         us_.base[us_.size++] = (blobLen >> 8);
         us_.base[us_.size++] = (blobLen >> 0);
     }
-    for (int i = 0; i < str.size(); i++)
+    for (int i = 0; i < len; i++)
     {
         int n = str[i];
         if (n & 0xff00)

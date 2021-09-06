@@ -139,8 +139,9 @@ bool Class::PEDump(Stream& peLib)
     {
         if (!peIndex_)
         {
-            if (typeid(*parent_) == typeid(Class))
+            if( dynamic_cast<Class*>(parent_) )
             {
+                // this is a nested class
                 parent_->PEDump(peLib);
                 ResolutionScope resolution(ResolutionScope::TypeRef, parent_->PEIndex());
                 size_t typenameIndex = peLib.PEOut().HashString(Name());
@@ -149,6 +150,7 @@ bool Class::PEDump(Stream& peLib)
             }
             else
             {
+                // this is a top-level class in an assembly
                 ResolutionScope resolution(ResolutionScope::AssemblyRef, ParentAssembly(peLib));
                 size_t typenameIndex = peLib.PEOut().HashString(Name());
                 size_t namespaceIndex = ParentNamespace(peLib);

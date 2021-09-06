@@ -178,9 +178,9 @@ void CodeContainer::BaseTypes(int& types) const
 void CodeContainer::Optimize()
 {
     LoadLabels();
-    OptimizeLDC();
-    OptimizeLDLOC();
-    OptimizeLDARG();
+    //OptimizeLDC();
+    //OptimizeLDLOC();
+    //OptimizeLDARG();
     OptimizeBranch();
     labels.clear();
 }

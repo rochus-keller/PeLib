@@ -86,6 +86,8 @@ namespace DotNetPELib
             return *this;
         }
 
+        bool Test(int flag) const { return (flags_ & flag)!=0; }
+
         ///** most qualifiers come before the name of the item
         void ILSrcDumpBeforeFlags(Stream&) const;
 

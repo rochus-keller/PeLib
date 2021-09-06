@@ -31,8 +31,11 @@
 #include "Instruction.h"
 #include "PELibError.h"
 #include <iomanip>
-#include <QtDebug>
 #include <cassert>
+#ifdef QT_CORE_LIB
+#include <QString>
+#include <QtDebug>
+#endif
 
 namespace DotNetPELib
 {
@@ -223,11 +226,29 @@ size_t Operand::Render(Stream& peLib, int opcode, int operandType, Byte* result)
             break;
         case t_string:
         {
-            const int size = stringValue_.size() + 1;
+#ifdef QT_CORE_LIB
+            QString str = QString::fromUtf8(stringValue_.c_str());
+            str.replace("\\0",'\0');
+            int size = str.size()+1;
+            wchar_t* buf = new wchar_t[size];
+            str.toWCharArray(buf);
+            buf[size-1] = 0;
+#else
+            std::string str = stringValue_;
+            int size = str.size();
+            if( str[size-1] == '0' && str[size-2] == '\\' )
+            {
+                str[size-2] = 0;
+                // size includes "\0"
+                size--;
+            }else
+                size++;
             wchar_t* buf = new wchar_t[size];
             for (int i = 0; i < size; i++)
-                buf[i] = stringValue_.c_str()[i];
-            size_t usIndex = peLib.PEOut().HashUS(buf);
+                buf[i] = str.c_str()[i];
+
+#endif
+            size_t usIndex = peLib.PEOut().HashUS(buf,size); // original was std::wstring which choped the explicit \0
             *(int*)(result) = usIndex | (0x70 << 24);
             sz += 4;
             delete[] buf;

@@ -77,6 +77,7 @@ size_t SignatureGenerator::EmbedType(int* buf, int offset, Type* tp)
 
     if (tp->ArrayLevel())
     {
+#if 0
         if (tp->ArrayLevel() == 1)
         {
             buf[offset + rv++] = ELEMENT_TYPE_SZARRAY;
@@ -85,6 +86,10 @@ size_t SignatureGenerator::EmbedType(int* buf, int offset, Type* tp)
         {
             buf[offset + rv++] = ELEMENT_TYPE_ARRAY;
         }
+#else
+        for( int i = 0; i < tp->ArrayLevel(); i++ )
+            buf[offset + rv++] = ELEMENT_TYPE_SZARRAY;
+#endif
     }
     switch (tp->GetBasicType())
     {
@@ -162,6 +167,7 @@ size_t SignatureGenerator::EmbedType(int* buf, int offset, Type* tp)
             buf[offset + rv++] = basicTypes[tp->GetBasicType()];
             break;
     }
+#if 0 // we only support SZARRAY of SZARRAY, not ARRAY
     if (tp->ArrayLevel() > 1)
     {
         buf[offset + rv++] = tp->ArrayLevel();  // rank
@@ -170,6 +176,7 @@ size_t SignatureGenerator::EmbedType(int* buf, int offset, Type* tp)
         for (int i = 0; i < tp->ArrayLevel(); i++)
             buf[offset + rv++] = 0;
     }
+#endif
     return rv;
 }
 size_t SignatureGenerator::LoadIndex(Byte* buf, size_t& start, size_t& len)

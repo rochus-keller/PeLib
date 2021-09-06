@@ -39,6 +39,9 @@
 #include <typeinfo>
 #include <algorithm>
 #include "SignatureGenerator.h"
+#ifdef QT_CORE_LIB
+#include <QtDebug>
+#endif
 
 namespace DotNetPELib
 {

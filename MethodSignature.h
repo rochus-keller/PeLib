@@ -92,11 +92,10 @@ namespace DotNetPELib
         void ArrayObject(Type *tp) { arrayObject_ = tp; }
 
         // iterate through parameters
-        typedef std::list<Param *>::iterator iterator;
+        typedef std::deque<Param *>::iterator iterator;
         iterator begin() { return params.begin(); }
         iterator end() { return params.end(); }
-        Param* getParam( int i ) const;
-        int getParamCount() const { return params.size(); }
+        Param* getParam(int i , bool byOrdinal = false) const;
 
         void GenericParent(MethodSignature* sig) { genericParent_ = sig; }
         MethodSignature* GenericParent() const { return genericParent_; }
@@ -107,8 +106,8 @@ namespace DotNetPELib
 
         // iterate through vararg parameters
         typedef std::list<Param *>::iterator viterator;
-        iterator vbegin() { return varargParams_.begin(); }
-        iterator vend() { return varargParams_.end(); }
+        viterator vbegin() { return varargParams_.begin(); }
+        viterator vend() { return varargParams_.end(); }
 
         ///** make it an instance member
         void Instance(bool instance);
@@ -162,7 +161,8 @@ namespace DotNetPELib
         Type *arrayObject_;
         std::string name_, display_name;
         int flags_;
-        std::list<Param *> params, varargParams_;
+        std::deque<Param*> params;
+        std::list<Param *> varargParams_;
         bool ref_;
         size_t peIndex_, peIndexCallSite_, peIndexType_;
         bool external_;

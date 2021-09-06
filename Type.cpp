@@ -153,6 +153,7 @@ bool Type::ILSrcDump(Stream& peLib) const
     }
     else if (arrayLevel_)
     {
+#if 0
         peLib.Out() << " [";
         for (int i = 0; i < arrayLevel_; i++)
         {
@@ -162,6 +163,12 @@ bool Type::ILSrcDump(Stream& peLib) const
                 peLib.Out() << "0...";
         }
         peLib.Out() << "]";
+#else
+        for (int i = 0; i < arrayLevel_; i++)
+        {
+            peLib.Out() << "[]";
+        }
+#endif
     }
     for (int i = 0; i < pointerLevel_; i++)
         peLib.Out() << " *";

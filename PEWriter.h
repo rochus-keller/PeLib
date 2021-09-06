@@ -46,7 +46,7 @@ public:
     void AddMethod(PEMethod *method);
     // various functions to throw things into one of the streams, they return the stream index
     size_t HashString(const std::string& utf8);
-    size_t HashUS(std::wstring str);
+    size_t HashUS(wchar_t* str, int len);
     size_t HashGUID(Byte *Guid);
     size_t HashBlob(Byte *blobData, size_t blobLen);
     // this is the 'cildata' contents.   Again we emit into the cildata and it returns the offset in
@@ -187,21 +187,8 @@ public:
         CIL = 0x4000, // not a real flag either
         EntryPoint = 0x8000 // not a real flag that goes in the PE file
     };
-    PEMethod(bool hasSEH, int Flags, size_t MethodDef, int MaxStack, int localCount, int CodeSize, size_t signature)
-        : flags_(Flags), hdrSize_(3), maxStack_(MaxStack), codeSize_(CodeSize), code_(nullptr), signatureToken_(signature), rva_(0), methodDef_(MethodDef)
-    {
-        if ((flags_ & 0xfff) == 0)
-        {
-            if (maxStack_ <= 8 && codeSize_ < 64 && localCount == 0 && !hasSEH)
-            {
-                flags_ = flags_ | (int)TinyFormat;
-            }
-            else
-            {
-                flags_ = flags_ | (int)FatFormat;
-            }
-        }
-    }
+    PEMethod(bool hasSEH, int Flags, size_t MethodDef, int MaxStack, int localCount, int CodeSize, size_t signature);
+
     enum {
         EHTable = 1,
         OptILTable = 2,
@@ -218,6 +205,9 @@ public:
     size_t rva_;
     size_t methodDef_;
     size_t Write(size_t sizes[MaxTables + ExtraIndexes], std::iostream &out) const;
+private:
+    PEMethod( const PEMethod& rhs );
+    PEMethod& operator=( const PEMethod& rhs );
 };
 
 }

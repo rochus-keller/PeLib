@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include <sstream>
 #include "SignatureGenerator.h"
+#include <cassert>
 
 namespace DotNetPELib
 {
@@ -94,7 +95,8 @@ void MethodSignature::AddParam(Param* param)
     {
         throw PELibError(PELibError::VarargParamsAlreadyDeclared);
     }
-    param->Index(params.size());
+    if( param->Index() == -1 )
+        param->Index(params.size());
     params.push_back(param);
 }
 
@@ -104,14 +106,20 @@ void MethodSignature::AddVarargParam(Param* param)
     varargParams_.push_back(param);
 }
 
-Param*MethodSignature::getParam(int i) const
+Param*MethodSignature::getParam(int i, bool byOrdinal) const
 {
-    std::list<Param *>::const_iterator j;
+    if( byOrdinal )
+    {
+        assert( i >= 0 && i < params.size() );
+        return params[i];
+    }
+    std::deque<Param *>::const_iterator j;
     for( j = params.begin(); j != params.end(); ++j )
     {
         if( (*j)->Index() == i )
             return (*j);
     }
+    assert(false);
     return 0;
 }
 
@@ -180,7 +188,7 @@ bool MethodSignature::ILSrcDump(Stream& peLib, bool names, bool asType, bool PIn
         }
     }
     peLib.Out() << AdornGenerics(peLib) << "(";
-    for (std::list<Param*>::const_iterator it = params.begin(); it != params.end();)
+    for (std::deque<Param*>::const_iterator it = params.begin(); it != params.end();)
     {
         if ((*it)->GetType()->GetBasicType() == Type::ClassRef)
         {
@@ -238,7 +246,7 @@ void MethodSignature::ILSignatureDump(Stream& peLib)
 
     }
     peLib.Out() << "(";
-    for (std::list<Param*>::const_iterator it = params.begin(); it != params.end();)
+    for (std::deque<Param*>::const_iterator it = params.begin(); it != params.end();)
     {
         if ((*it)->GetType()->GetBasicType() == Type::ClassRef)
         {
