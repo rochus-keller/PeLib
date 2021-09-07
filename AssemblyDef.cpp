@@ -32,6 +32,7 @@
 #include "Stream.h"
 #include "sha1.h"
 #include <climits>
+#include <string.h>
 namespace DotNetPELib
 {
 bool AssemblyDef::ILHeaderDump(Stream& peLib)

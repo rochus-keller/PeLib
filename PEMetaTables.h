@@ -30,8 +30,7 @@
 #include <string>
 #include <set>
 #include <iostream>
-#include <string.h> // TODO
-#include "sha1.h"
+
 // this is an internal header used to define the various aspects of a PE file
 // and the functions to render the files
 // it won't normally be much use to users of the DotNetPELib Library

@@ -27,6 +27,7 @@
 #include "PEWriter_Private.h"
 #include "PELibError.h"
 #include "SignatureGenerator.h"
+#include "sha1.h"
 #include <time.h>
 #include <stdio.h>
 #include <iostream>
@@ -377,6 +378,7 @@ void PEWriter::SetBaseClasses(size_t ObjectIndex, size_t ValueIndex, size_t Enum
 
 void PEWriter::CalculateObjects(int corFlags)
 {
+    assert( peHeader_ == 0 );
     peHeader_ = new PEHeader;
     memset(peHeader_, 0, sizeof(PEHeader));
     peHeader_->signature = PESIG;
@@ -406,6 +408,7 @@ void PEWriter::CalculateObjects(int corFlags)
     }
     peHeader_->time = time(0);
 
+    assert( peObjects_ == 0 );
     peObjects_ = new PEObject[MAX_PE_OBJECTS];
     memset(peObjects_, 0, sizeof(PEObject) * MAX_PE_OBJECTS);
 
@@ -433,6 +436,7 @@ void PEWriter::CalculateObjects(int corFlags)
     peHeader_->com_size = sizeof(DotNetCOR20Header);
     currentRVA += peHeader_->com_size;
 
+    assert( cor20Header_ == 0 );
     cor20Header_ = new DotNetCOR20Header;
     memset(cor20Header_, 0, sizeof(DotNetCOR20Header));
     cor20Header_->cb = sizeof(DotNetCOR20Header);
@@ -540,6 +544,7 @@ void PEWriter::CalculateObjects(int corFlags)
     }
 
     streamHeaders_[0][0] = currentRVA - cor20Header_->MetaData[0];
+    assert( tablesHeader_ == 0 );
     tablesHeader_ = new DotNetMetaTablesHeader;
     memset(tablesHeader_, 0, sizeof(DotNetMetaTablesHeader));
     tablesHeader_->MajorVersion = 2;

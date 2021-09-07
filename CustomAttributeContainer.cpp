@@ -26,6 +26,7 @@
 #include "CustomAttributeContainer.h"
 #include "PEMetaTables.h"
 #include "AssemblyDef.h"
+#include <string.h>
 
 namespace DotNetPELib
 {

@@ -98,7 +98,7 @@ size_t DataContainer::ParentAssembly(Stream& peLib) const
         current = current->Parent();
     }
     if (current->InAssemblyRef())
-        ; // TODO original leads to eternal recursion: static_cast<AssemblyDef*>(current)->PEDump(peLib);
+        ; // TODO original leads to infinite loop: static_cast<AssemblyDef*>(current)->PEDump(peLib);
     return current->PEIndex();
 }
 DataContainer *DataContainer::FindContainer(const std::string& name, std::deque<Type*>* generics)

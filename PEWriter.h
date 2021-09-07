@@ -135,7 +135,7 @@ private:
     };
     DNLTable tables_[MaxTables];
     size_t entryPoint_;
-    std::list<PEMethod *>methods_;
+    std::list<PEMethod *> methods_;
     size_t objectBase_;
     size_t valueBase_;
     size_t enumBase_;

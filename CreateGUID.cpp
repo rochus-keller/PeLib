@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <functional>
 #include "PEWriter.h"
+#include <string.h>
 
 void DotNetPELib::PEWriter::CreateGuid(Byte* Guid)
 {

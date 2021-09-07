@@ -33,6 +33,7 @@
 #include "Operand.h"
 #include "Value.h"
 #include <typeinfo>
+#include <string.h>
 namespace DotNetPELib
 {
 bool CodeContainer::InAssemblyRef() const { return parent_->InAssemblyRef(); }

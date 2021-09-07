@@ -707,24 +707,40 @@ size_t GenericParamConstraintsTableEntry::Get(size_t sizes[MaxTables + ExtraInde
     return n;
 }
 
-static int instCount = 0;
+#ifdef QT_CORE_LIB_
+QSet<MetaBase*> instances;
 MetaBase::MetaBase()
 {
-    instCount++;
+    instances.insert(this);
 }
 
 MetaBase::~MetaBase()
 {
-    instCount--;
+    instances.remove(this);
 }
 
 void MetaBase::dump()
 {
-#ifdef QT_CORE_LIB
-    if( instCount )
-        qDebug() << "remaining MetaBase" << instCount;
-#endif
-    instCount = 0;
+    QSet<MetaBase*>::const_iterator i;
+    for( i = instances.begin(); i != instances.end(); ++i )
+    {
+        qDebug() << QByteArray(typeid(**i).name()).mid(14);
+        delete *i;
+    }
+    instances.clear();
 }
+#else
+MetaBase::MetaBase()
+{
+}
+
+MetaBase::~MetaBase()
+{
+}
+
+void MetaBase::dump()
+{
+}
+#endif
 
 }  // namespace DotNetPELib
