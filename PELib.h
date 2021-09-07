@@ -118,6 +118,9 @@ namespace DotNetPELib
     class Namespace;
     class Resource;
 
+    // TODO: the AST of PELib can be considerably simplified (we actually only need what the IlEmitter API provides)
+    // TODO: the PEDump implementation still has issues (e.g. redundant calls to PEDump out in the tree leading to
+    // redundant types with different IDs and thus runtime exceptions because of "wrong" signatures)
 
     ///** this is the main class to instantiate
     // the constructor creates a working assembly, you put all your code and data into that
@@ -208,8 +211,6 @@ namespace DotNetPELib
         bool ILSrcDump(const std::string& fileName);
 
         Class* FindOrCreateGeneric(std::string name, std::deque<Type*>& generics);
-
-        Byte* AllocateBytes(size_t sz);
     protected:
         void SplitPath(std::vector<std::string> & split, std::string path);
         bool ILSrcDumpHeader(Stream&);
@@ -228,7 +229,6 @@ namespace DotNetPELib
         int objInputSize_;
         int objInputPos_;
         int objInputCache_;
-        std::deque<Byte*> allocatedBytes_;
         std::string libPath_;
     };
 

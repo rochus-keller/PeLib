@@ -262,11 +262,12 @@ namespace DotNetPELib {
 
     };
 
-    class TableEntryBase;
-    class TableEntryFactory
+    class MetaBase
     {
-        public:
-            static TableEntryBase *GetEntry(size_t index);
+    public:
+        MetaBase();
+        virtual ~MetaBase();
+        static void dump();
     };
 
     // this class is the base class for index rendering
@@ -276,7 +277,7 @@ namespace DotNetPELib {
     // Note that these indexes are used in tables and also in the blobs, however, in the actual intermediate
     // code a token is used.  the index in the is 24 bits unshifted, bits 24-31 holding the table number
 
-    class IndexBase
+    class IndexBase : public MetaBase
     {
     public:
         IndexBase() : tag_(0), index_(0) { }
@@ -598,7 +599,7 @@ namespace DotNetPELib {
     };
     // this is the base class for the metadata tables
     //
-    class TableEntryBase
+    class TableEntryBase : public MetaBase
     {
     public:
         virtual ~TableEntryBase() { }

@@ -41,6 +41,7 @@
 #include "SignatureGenerator.h"
 #ifdef QT_CORE_LIB
 #include <QtDebug>
+#include "AssemblyDef.h"
 #endif
 
 namespace DotNetPELib
@@ -147,7 +148,13 @@ bool Method::PEDump(Stream& peLib)
     }
     else
     {
-        Byte* code;
+        if( rendering_ )
+        {
+#ifdef QT_CORE_LIB
+            qWarning() << "already dumped" << GetContainer()->Name().c_str() << Signature()->Name().c_str();
+#endif
+            return true;
+        }
         size_t sz;
         size_t methodSignature = 0;
         Byte* sig = nullptr;
@@ -199,12 +206,26 @@ bool Method::PEDump(Stream& peLib)
         Instruction* last = nullptr;
         if (instructions_.size())
             last = instructions_.back();
-        rendering_ = new PEMethod(hasSEH_, (entryPoint_ ? PEMethod::EntryPoint : 0) | (invokeMode_ == CIL && !(flags_.Flags() & Qualifiers::Runtime) ? PEMethod::CIL : 0),
+
+        int peflags = 0;
+        const bool isRuntime = flags_.Flags() & Qualifiers::Runtime;
+        if(entryPoint_ )
+            peflags |= PEMethod::EntryPoint;
+        if( invokeMode_ == CIL && !isRuntime )
+            peflags |= PEMethod::CIL;
+
+        rendering_ = new PEMethod( hasSEH_, peflags,
                                   peLib.PEOut().NextTableIndex(tMethodDef), maxStack_, varList_.size(),
                                   last ? last->Offset() + last->InstructionSize() : 0,
                                   methodSignature ? methodSignature | (tStandaloneSig << 24) : 0);
         if (invokeMode_ == CIL)
+        {
+#ifdef QT_CORE_LIB
+            if( isRuntime && !instructions_.empty() || !isRuntime && instructions_.empty() )
+                qWarning() << "Invalid method\t" << GetContainer()->getAssembly()->Name().c_str() << GetContainer()->Name().c_str() << Signature()->Name().c_str();
+#endif
             peLib.PEOut().AddMethod(rendering_);
+        }
         delete[] sig;
 
         int implFlags = 0;
@@ -307,7 +328,9 @@ bool Method::PEDump(Stream& peLib)
 }
 void Method::Compile(Stream& peLib)
 {
+
     rendering_->code_ = CodeContainer::Compile(peLib, rendering_->codeSize_);
+    // code_ and codeSize_ are zero if no instruction, e.g. in delegate impls; seems a legal outcome
     CodeContainer::CompileSEH(rendering_->sehData_);
 }
 void Method::Optimize()

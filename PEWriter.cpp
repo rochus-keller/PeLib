@@ -30,6 +30,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <iostream>
+#include <cassert>
 #ifdef QT_CORE_LIB
 #include <QtDebug>
 #endif
@@ -78,6 +79,12 @@ PEMethod::PEMethod(bool hasSEH, int Flags, size_t MethodDef, int MaxStack,
     }
 }
 
+PEMethod::~PEMethod()
+{
+    if( code_ )
+        delete[] code_;
+}
+
 size_t PEMethod::Write(size_t sizes[MaxTables + ExtraIndexes], std::iostream& out) const
 {
     Byte dest[512];
@@ -96,11 +103,8 @@ size_t PEMethod::Write(size_t sizes[MaxTables + ExtraIndexes], std::iostream& ou
         *(DWord*)(dest + 8) = signatureToken_;
     }
     out.write((char*)dest, n);
-    if( code_ == 0 ) // TODO: is this a legal state?
-        out.write( std::string(codeSize_,0).c_str(), codeSize_); // TODO: provisoric solution to avoid crash
-    else
-        out.write((char*)code_, codeSize_);
-    //qDebug() << "write\t" << who.c_str() << "\t" << (code_ != 0);
+    assert( code_ != 0 );
+    out.write((char*)code_, codeSize_);
     n += codeSize_;
     if (sehData_.size())
     {

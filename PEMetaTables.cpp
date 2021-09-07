@@ -26,6 +26,9 @@
 #include "PEWriter.h"
 #include <time.h>
 #include <stdio.h>
+#ifdef QT_CORE_LIB
+#include <QtDebug>
+#endif
 namespace DotNetPELib
 {
 size_t IndexBase::Render(size_t sizes[MaxTables + ExtraIndexes], Byte* dest) const
@@ -703,4 +706,25 @@ size_t GenericParamConstraintsTableEntry::Get(size_t sizes[MaxTables + ExtraInde
     n += constraint_.Get(sizes, src + n);
     return n;
 }
+
+static int instCount = 0;
+MetaBase::MetaBase()
+{
+    instCount++;
+}
+
+MetaBase::~MetaBase()
+{
+    instCount--;
+}
+
+void MetaBase::dump()
+{
+#ifdef QT_CORE_LIB
+    if( instCount )
+        qDebug() << "remaining MetaBase" << instCount;
+#endif
+    instCount = 0;
+}
+
 }  // namespace DotNetPELib

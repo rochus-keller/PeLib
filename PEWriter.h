@@ -188,6 +188,7 @@ public:
         EntryPoint = 0x8000 // not a real flag that goes in the PE file
     };
     PEMethod(bool hasSEH, int Flags, size_t MethodDef, int MaxStack, int localCount, int CodeSize, size_t signature);
+    ~PEMethod();
 
     enum {
         EHTable = 1,

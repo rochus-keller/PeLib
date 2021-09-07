@@ -60,7 +60,7 @@ Byte* CodeContainer::Compile(Stream& peLib, size_t& sz)
         sz = last->Offset() + last->InstructionSize();
         if (sz)
         {
-            rv = new Byte[sz];
+            rv = new Byte[sz]; // ownership goes to PEMethod which deletes the bytes
             int pos = 0;
             for (auto instruction : instructions_)
             {
@@ -434,7 +434,6 @@ void CodeContainer::ValidateInstructions()
         else
             switch (instruction->OpCode())
             {
-#if 0 // TODO doesn't work in the presence of virtual or instance methods because of implicit this parameter
                 case Instruction::i_ldarg:
                 case Instruction::i_ldarga:
                 case Instruction::i_starg:
@@ -451,7 +450,6 @@ void CodeContainer::ValidateInstructions()
                         throw PELibError(PELibError::IndexOutOfRange, ((Param*)instruction->GetOperand()->GetValue())->Name());
                     }
                 break;
-#endif
                 case Instruction::i_ldloc:
                 case Instruction::i_ldloca:
                 case Instruction::i_stloc:

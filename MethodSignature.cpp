@@ -276,6 +276,8 @@ bool MethodSignature::PEDump(Stream& peLib, bool asType)
                     returnType_->GetClass()->PEDump(peLib);
                 }
             }
+#if 0
+            // TODO: no, this leads to rendering of the same class more than once!
             for (auto param : params)
             {
                 if (param && param->GetType()->GetBasicType() == Type::ClassRef)
@@ -283,6 +285,7 @@ bool MethodSignature::PEDump(Stream& peLib, bool asType)
                     param->GetType()->GetClass()->PEDump(peLib);
                 }
             }
+#endif
             size_t sz;
             if (generic_.size())
             {                

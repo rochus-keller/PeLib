@@ -76,10 +76,6 @@ PELib::~PELib()
         if( *j )
             delete *j;
     }
-    std::deque<Byte*>::const_iterator i;
-    for( i = allocatedBytes_.begin(); i != allocatedBytes_.end(); ++i )
-        delete[] *i;
-    allocatedBytes_.clear();
     s_this = 0;
 }
 AssemblyDef* PELib::EmptyWorkingAssembly(const std::string& AssemblyName)
@@ -376,13 +372,6 @@ Class* PELib::FindOrCreateGeneric(std::string name, std::deque<Type*>& generics)
     return nullptr;
 }
 
-Byte*PELib::AllocateBytes(size_t sz)
-{
-    Byte* res = new Byte[sz];
-    allocatedBytes_.push_back(res);
-    return res;
-}
-
 PELib::eFindType PELib::Find(std::string path, Method **result, const std::vector<Type*>& args, Type* rv, std::deque<Type*>* generics, AssemblyDef *assembly, bool matchArgs)
 {
     if (path.size() && path[0] == '[')
@@ -538,9 +527,9 @@ bool PELib::DumpPEFile(std::string file, bool isexe, bool isgui)
     TableEntryBase* table = new TypeDefTableEntry(0, moduleIndex, 0, typeDef, 1, 1);
     peWriter.AddTableEntry(table);
 
-    int types = 0;
-    WorkingAssembly()->BaseTypes(types);
-    if (types)
+    int baseTypes = 0;
+    WorkingAssembly()->BaseTypes(baseTypes);
+    if (baseTypes)
     {
         MSCorLibAssembly();
     }
@@ -548,33 +537,35 @@ bool PELib::DumpPEFile(std::string file, bool isexe, bool isgui)
     size_t objectIndex = 0;
     size_t valueIndex = 0;
     size_t enumIndex = 0;
-    if (types)
+    if (baseTypes)
     {
         systemIndex = peWriter.HashString("System");
-        if (types & DataContainer::basetypeObject)
+        if (baseTypes & DataContainer::basetypeObject)
         {
             objectIndex = peWriter.HashString("Object");
         }
-        if (types & DataContainer::basetypeValue)
+        if (baseTypes & DataContainer::basetypeValue)
         {
             valueIndex = peWriter.HashString("ValueType");
         }
-        if (types & DataContainer::basetypeEnum)
+        if (baseTypes & DataContainer::basetypeEnum)
         {
             enumIndex = peWriter.HashString("Enum");
         }
     }
     Stream s(&peWriter,this);
-    for (auto assemblyRef : assemblyRefs_)
+
+    for (AssemblyDef * assemblyRef : assemblyRefs_)
     {
         assemblyRef->PEHeaderDump(s);
     }
-    if (types)
+
+    if (baseTypes)
     {
         AssemblyDef* mscorlibAssembly = MSCorLibAssembly();
         int assemblyIndex = mscorlibAssembly->PEIndex();
         ResolutionScope rs(ResolutionScope::AssemblyRef, assemblyIndex);
-        if (types & DataContainer::basetypeObject)
+        if (baseTypes & DataContainer::basetypeObject)
         {
             Resource* result = nullptr;
             table = new TypeRefTableEntry(rs, objectIndex, systemIndex);
@@ -583,7 +574,7 @@ bool PELib::DumpPEFile(std::string file, bool isexe, bool isgui)
             if (result)
                 static_cast<Class*>(result)->PEIndex(objectIndex);
         }
-        if (types & DataContainer::basetypeValue)
+        if (baseTypes & DataContainer::basetypeValue)
         {
             Resource* result = nullptr;
             table = new TypeRefTableEntry(rs, valueIndex, systemIndex);
@@ -592,7 +583,7 @@ bool PELib::DumpPEFile(std::string file, bool isexe, bool isgui)
             if (result)
                 static_cast<Class*>(result)->PEIndex(valueIndex);
         }
-        if (types & DataContainer::basetypeEnum)
+        if (baseTypes & DataContainer::basetypeEnum)
         {
             Resource* result = nullptr;
             table = new TypeRefTableEntry(rs, enumIndex, systemIndex);

@@ -34,7 +34,6 @@
 #include <cassert>
 #ifdef QT_CORE_LIB
 #include <QString>
-#include <QtDebug>
 #endif
 
 namespace DotNetPELib

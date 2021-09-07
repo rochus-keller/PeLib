@@ -65,6 +65,7 @@ namespace DotNetPELib
         const CustomAttributeContainer &CustomAttributes() const { return customAttributes_;  }
 
         virtual bool InAssemblyRef() const override { return external_; }
+        virtual AssemblyDef* getAssembly() { return this; }
 
         bool IsLoaded() { return loaded_; }
 

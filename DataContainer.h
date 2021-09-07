@@ -40,6 +40,7 @@ namespace DotNetPELib
     class Callback;
     class CodeContainer;
     class Stream;
+    class AssemblyDef;
 
     ///** base class that contains other datacontainers or codecontainers
     // that means it can contain namespaces, classes, methods, or fields
@@ -125,6 +126,7 @@ namespace DotNetPELib
 
         // internal functions
         virtual bool InAssemblyRef() const { return parent_->InAssemblyRef(); }
+        virtual AssemblyDef* getAssembly() { return parent_->getAssembly(); }
 
         virtual bool ILSrcDump(Stream &) const;
 
