@@ -598,9 +598,8 @@ bool PELib::DumpPEFile(std::string file, bool isexe, bool isgui)
     if (npos != std::string::npos && npos != file.size() - 1)
         file = file.substr(npos + 1);
     size_t nameIndex = peWriter.HashString(file);
-    Byte guid[128 / 8];
-    peWriter.CreateGuid(guid);
-    size_t guidIndex = peWriter.HashGUID(guid);
+    peWriter.CreateGuid(moduleGuid);
+    size_t guidIndex = peWriter.HashGUID(moduleGuid);
     table = new ModuleTableEntry(nameIndex, guidIndex);
     peWriter.AddTableEntry(table);
 

@@ -107,8 +107,9 @@ namespace DotNetPELib
 
         virtual void Compile(Stream&) { }
 
-        std::list<Instruction *>::iterator begin() { return instructions_.begin(); }
-        std::list<Instruction *>::iterator end() { return instructions_.end(); }
+        std::deque<Instruction *>::iterator begin() { return instructions_.begin(); }
+        std::deque<Instruction *>::iterator end() { return instructions_.end(); }
+        const std::deque<Instruction *>& instructions() const { return instructions_; }
 
     protected:
         std::map<std::string, Instruction *> labels;
@@ -119,7 +120,7 @@ namespace DotNetPELib
         void OptimizeBranch();
         void CalculateOffsets();
         bool ModifyBranches();
-        std::list<Instruction *> instructions_;
+        std::deque<Instruction *> instructions_;
         Qualifiers flags_;
         DataContainer *parent_;
         bool hasSEH_;

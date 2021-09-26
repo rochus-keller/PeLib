@@ -211,6 +211,10 @@ namespace DotNetPELib
         bool ILSrcDump(const std::string& fileName);
 
         Class* FindOrCreateGeneric(std::string name, std::deque<Type*>& generics);
+
+        Byte moduleGuid[16];
+        std::string sourceFile;
+        std::deque<Method*> allMethods;
     protected:
         void SplitPath(std::vector<std::string> & split, std::string path);
         bool ILSrcDumpHeader(Stream&);

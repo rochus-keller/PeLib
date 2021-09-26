@@ -73,6 +73,14 @@ void Method::Instance(bool instance)
     if (prototype_)
         prototype_->Instance(instance);
 }
+
+size_t Method::getToken() const
+{
+    if( rendering_ )
+        return rendering_->methodDef_ | (tMethodDef << 24);
+    else
+        return 0;
+}
 void Method::AddLocal(Local* local)
 {
     local->Index(varList_.size());
@@ -330,6 +338,7 @@ void Method::Compile(Stream& peLib)
 {
 
     rendering_->code_ = CodeContainer::Compile(peLib, rendering_->codeSize_);
+    peLib.addMethod(this);
     // code_ and codeSize_ are zero if no instruction, e.g. in delegate impls; seems a legal outcome
     CodeContainer::CompileSEH(rendering_->sehData_);
 }
@@ -400,8 +409,7 @@ void Method::CalculateMaxStack()
     maxStack_ = 0;
     int n = 0;
     bool lastBranch = false;
-    bool skipping = false;
-    for (auto instruction : instructions_)
+    for (Instruction * instruction : instructions_)
     {
         if (instruction->IsLive())
         {
@@ -501,7 +509,7 @@ void Method::CalculateMaxStack()
 }
 void Method::OptimizeLocals()
 {
-    for (auto instruction : instructions_)
+    for (Instruction * instruction : instructions_)
     {
         Operand* op = instruction->GetOperand();
         if (op)
@@ -515,7 +523,7 @@ void Method::OptimizeLocals()
     }
     std::sort(varList_.begin(), varList_.end(), [](const Local* left, const Local* right) { return left->Uses() > right->Uses(); });
     int index = 0;
-    for (auto a : varList_)
+    for (Local* a : varList_)
     {
         a->Index(index++);
     }

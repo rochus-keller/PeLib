@@ -376,7 +376,7 @@ void CodeContainer::OptimizeLDARG()
 void CodeContainer::CalculateOffsets()
 {
     int ofs = 0;
-    for (auto instruction : instructions_)
+    for (Instruction* instruction : instructions_)
     {
         instruction->Offset(ofs);
         ofs += instruction->InstructionSize();

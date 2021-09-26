@@ -35,6 +35,7 @@ namespace DotNetPELib
 class PEWriter;
 class PELib;
 class Resource;
+class Method;
 
 class Stream
 {
@@ -47,6 +48,7 @@ public:
 
     PEWriter &PEOut() const { return *peWriter_; }
     void Find( const std::string& name, Resource** result );
+    void addMethod( Method* );
 
     std::map<size_t, size_t> moduleRefs;
 private:

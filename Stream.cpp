@@ -42,3 +42,8 @@ void Stream::Find(const std::string& name, Resource** result)
     peLib_->Find(name, result, nullptr, peLib_->MSCorLibAssembly() );
 }
 
+void Stream::addMethod(Method* m)
+{
+    peLib_->allMethods.push_back(m);
+}
+

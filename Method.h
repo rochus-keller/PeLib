@@ -76,6 +76,8 @@ namespace DotNetPELib
         size_t size() const { return varList_.size(); }
         Local* getLocal(int i) const { return varList_[i]; }
 
+        size_t getToken() const;
+
         // Internal functions
         void MaxStack(int stack) { maxStack_ = stack;  }
         virtual bool ILSrcDump(Stream &) const override;

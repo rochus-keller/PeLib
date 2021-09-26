@@ -52,6 +52,8 @@ namespace DotNetPELib
             i_label,
             ///** This instruction is a placeholder for a comment
             i_comment,
+            ///** row [ ':' column ] [ '/' filepath ]
+            i_line,
             ///** This instruction is an SEH specifier
             i_SEH,
             ///** actual CIL instructions start here
@@ -90,6 +92,15 @@ namespace DotNetPELib
             o_none, o_single, o_rel1, o_rel4, o_index1, o_index2, o_index4,
             o_immed1, o_immed4, o_immed8, o_float4, o_float8, o_switch
         };
+        struct InstructionName {
+            const char *name;
+            Byte op1;
+            Byte op2;
+            Byte bytes;
+            Byte operandType;
+            char stackUsage; // positive it adds to stack, negative it consumes stack
+        };
+        static InstructionName instructions_[];
 
         Instruction(iop Op, Operand *Operand = 0);
 
@@ -183,15 +194,6 @@ namespace DotNetPELib
         };
         std::string text_; // for comments
         bool live_;
-        struct InstructionName {
-            const char *name;
-            Byte op1;
-            Byte op2;
-            Byte bytes;
-            Byte operandType;
-            char stackUsage; // positive it adds to stack, negative it consumes stack
-        };
-        static InstructionName instructions_[];
     };
 }
 

@@ -36,10 +36,12 @@ namespace DotNetPELib
 {
 typedef unsigned DWord; /* four bytes */
 
+// Opcodes are either 1 byte or 2 bytes long; in the latter case, the first byte of the opcode is always 0xFE.
 Instruction::InstructionName Instruction::instructions_[] = {
-    {"<unknown>", 0, (Byte)-1, 0, o_none, 0},
+    {"<unknown>", 0, (Byte)-1, 0, Instruction::o_none, 0},
     {".label", 0, (Byte)-1, 0, o_none, 0},
     {".comment", 0, (Byte)-1, 0, o_none, 0},
+    {".line", 0, (Byte)-1, 0, o_none, 0},
     {".SEH", 0, (Byte)-1, 0, o_none, 0},
     {"add", 0x58, (Byte)-1, 1, o_single, -1},
     {"add.ovf", 0xd6, (Byte)-1, 1, o_single, -1},
@@ -269,7 +271,9 @@ Instruction::InstructionName Instruction::instructions_[] = {
     {"unbox", 0x79, (Byte)-1, 5, o_index4, 0},
     {"unbox.any", 0xa5, (Byte)-1, 5, o_index4, 0},
     {"volatile.", 0xfe, 13, 2, o_single, 0},
-    {"xor", 0x61, (Byte)-1, 1, o_single, -1}};
+    {"xor", 0x61, (Byte)-1, 1, o_single, -1},
+    {0, 0, 0, 0, o_single, 0}
+};
 Instruction::Instruction(iop Op, Operand* Oper) : op_(Op), switches_(nullptr), live_(false), offset_(0), sehType_(0), sehBegin_(0)
 {
     switches_ = new std::list<std::string>();
@@ -424,7 +428,7 @@ size_t Instruction::Render(Stream& peLib, Byte* result, std::map<std::string, In
         if (sehCatchType_)
             sehCatchType_->Render(peLib, data);
     }
-    if (op_ != i_label && op_ != i_comment && op_ != i_SEH)
+    if (op_ != i_label && op_ != i_comment && op_ != i_SEH && op_ != i_line )
     {
         result[sz++] = instructions_[op_].op1;
         if (instructions_[op_].op2 != 0xff)
