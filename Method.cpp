@@ -53,7 +53,8 @@ Method::Method(MethodSignature* Prototype, Qualifiers flags, bool entry) :
     invokeMode_(CIL),
     pInvokeType_(Stdcall),
     entryPoint_(entry),
-    rendering_(nullptr)
+    rendering_(nullptr),
+    token_(0)
 {
     if (!(flags_.Flags() & Qualifiers::Static))
         prototype_->Instance(true);
@@ -74,13 +75,6 @@ void Method::Instance(bool instance)
         prototype_->Instance(instance);
 }
 
-size_t Method::getToken() const
-{
-    if( rendering_ )
-        return rendering_->methodDef_ | (tMethodDef << 24);
-    else
-        return 0;
-}
 void Method::AddLocal(Local* local)
 {
     local->Index(varList_.size());
@@ -222,10 +216,12 @@ bool Method::PEDump(Stream& peLib)
         if( invokeMode_ == CIL && !isRuntime )
             peflags |= PEMethod::CIL;
 
+        Q_ASSERT( rendering_ == 0 );
         rendering_ = new PEMethod( hasSEH_, peflags,
                                   peLib.PEOut().NextTableIndex(tMethodDef), maxStack_, varList_.size(),
                                   last ? last->Offset() + last->InstructionSize() : 0,
                                   methodSignature ? methodSignature | (tStandaloneSig << 24) : 0);
+        token_ = rendering_->methodDef_ | (tMethodDef << 24);
         if (invokeMode_ == CIL)
         {
 #ifdef QT_CORE_LIB
@@ -233,6 +229,7 @@ bool Method::PEDump(Stream& peLib)
                 qWarning() << "Invalid method\t" << GetContainer()->getAssembly()->Name().c_str() << GetContainer()->Name().c_str() << Signature()->Name().c_str();
 #endif
             peLib.PEOut().AddMethod(rendering_);
+            peLib.addMethod(this);
         }
         delete[] sig;
 
@@ -338,7 +335,6 @@ void Method::Compile(Stream& peLib)
 {
 
     rendering_->code_ = CodeContainer::Compile(peLib, rendering_->codeSize_);
-    peLib.addMethod(this);
     // code_ and codeSize_ are zero if no instruction, e.g. in delegate impls; seems a legal outcome
     CodeContainer::CompileSEH(rendering_->sehData_);
 }

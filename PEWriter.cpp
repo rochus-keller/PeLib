@@ -62,7 +62,8 @@ Byte PEWriter::defaultUS_[8] = {0, 3, 0x20, 0, 0};
 
 PEMethod::PEMethod(bool hasSEH, int Flags, size_t MethodDef, int MaxStack,
                    int localCount, int CodeSize, size_t signature)
-    : flags_(Flags), hdrSize_(3), maxStack_(MaxStack), codeSize_(CodeSize), code_(nullptr), signatureToken_(signature), rva_(0), methodDef_(MethodDef)
+    : flags_(Flags), hdrSize_(3), maxStack_(MaxStack), codeSize_(CodeSize), code_(nullptr),
+      signatureToken_(signature), rva_(0), methodDef_(MethodDef)
 {
     //static int count = 0;
     //count++;
@@ -255,8 +256,17 @@ PEWriter::~PEWriter()
 }
 size_t PEWriter::AddTableEntry(TableEntryBase* entry)
 {
-    int n = entry->TableIndex();
+    const int n = entry->TableIndex();
     tables_[n].push_back(entry);
+#if 0
+    // seems to alway apply
+    if( n == tMethodDef )
+    {
+        MethodDefTableEntry* e = (MethodDefTableEntry*)entry;
+        const int id = tables_[n].size();
+        Q_ASSERT( id == e->method_->methodDef_ );
+    }
+#endif
     return tables_[n].size();
 }
 void PEWriter::AddMethod(PEMethod* method)
@@ -473,7 +483,7 @@ void PEWriter::CalculateObjects(int corFlags)
             currentRVA += 8 - (currentRVA % 8);
     }
     size_t lastRVA = currentRVA;
-    for (auto method : methods_)
+    for (PEMethod* method : methods_)
     {
         if (method->flags_ & PEMethod::CIL)
         {
@@ -1155,5 +1165,9 @@ bool PEWriter::WriteRelocs() const
     // aligns the end of the file
     align(fileAlign_);
     return true;
+}
+size_t PEWriter::NextTableIndex(int table) const
+{
+    return tables_[table].size() + 1;
 }
 }  // namespace DotNetPELib

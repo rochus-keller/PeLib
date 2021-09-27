@@ -77,7 +77,7 @@ public:
 
     static void CreateGuid(Byte *Guid);
 
-    size_t NextTableIndex(int table) const { return tables_[table].size() + 1; }
+    size_t NextTableIndex(int table) const;
     bool WriteFile(int corFlags, std::iostream &out);
     void HashPartOfFile(SHA1Context &context, size_t offset, size_t len);
 

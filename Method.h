@@ -76,7 +76,7 @@ namespace DotNetPELib
         size_t size() const { return varList_.size(); }
         Local* getLocal(int i) const { return varList_[i]; }
 
-        size_t getToken() const;
+        size_t getToken() const { return token_; }
 
         // Internal functions
         void MaxStack(int stack) { maxStack_ = stack;  }
@@ -96,6 +96,7 @@ namespace DotNetPELib
         int maxStack_;
         bool entryPoint_;
         PEMethod *rendering_;
+        size_t token_; // redundant from rendering_->methodDef_ because PEWriter deletes all PEMethods
     };
 }
 

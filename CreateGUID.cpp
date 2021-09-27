@@ -54,3 +54,4 @@ void DotNetPELib::PEWriter::CreateGuid(Byte* Guid)
 
     memcpy(Guid, rnd.data(), rnd.size());
 }
+
