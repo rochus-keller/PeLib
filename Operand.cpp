@@ -227,7 +227,7 @@ size_t Operand::Render(Stream& peLib, int opcode, int operandType, Byte* result)
         {
 #ifdef QT_CORE_LIB
             QString str = QString::fromUtf8(stringValue_.c_str());
-            str.replace("\\0",'\0');
+            str.replace("\\0",QChar('\0'));
             int size = str.size()+1;
             wchar_t* buf = new wchar_t[size];
             str.toWCharArray(buf);

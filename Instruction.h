@@ -29,6 +29,7 @@
 #include <PeLib/Resource.h>
 #include <map>
 #include <list>
+#include <string>
 
 namespace DotNetPELib
 {

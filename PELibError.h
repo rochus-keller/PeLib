@@ -27,6 +27,7 @@
  */
 
 #include  <stdexcept>
+#include <string>
 
 namespace DotNetPELib
 {
