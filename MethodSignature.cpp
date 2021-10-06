@@ -276,16 +276,22 @@ bool MethodSignature::PEDump(Stream& peLib, bool asType)
                     returnType_->GetClass()->PEDump(peLib);
                 }
             }
-#if 0
-            // TODO: no, this leads to rendering of the same class more than once!
-            for (auto param : params)
+
+            for(Param* param : params)
             {
                 if (param && param->GetType()->GetBasicType() == Type::ClassRef)
                 {
-                    param->GetType()->GetClass()->PEDump(peLib);
+                    // NOTE: original called PEDump unconditionally, which leads to
+                    // rendering of the same class and its methods more than once!
+                    // If this is not called at all, not all referenced classes are considered
+                    // in the meta tables, e.g. Display.FrameMsg in System.Recall, which is only used as param type.
+                    // This lead to nil tokens in typerefs and assemblies which are only read up to this token by Mono!
+                    Class* cls = dynamic_cast<Class*>(param->GetType()->GetClass());
+                    if( cls && cls->InAssemblyRef() && cls->PEIndex() == 0 )
+                        cls->PEDump(peLib);
                 }
             }
-#endif
+
             size_t sz;
             if (generic_.size())
             {                
