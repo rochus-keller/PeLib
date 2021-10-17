@@ -111,13 +111,13 @@ typedef long long longlong;
     struct PEHeader
     {
         int signature;
-        short cpu_type;
-        short num_objects;
-        int time;
-        int symbol_ptr;
-        int num_symbols;
-        short nt_hdr_size;
-        short flags;
+        short cpu_type;     // machine
+        short num_objects;  // Number of Sections
+        int time;           // Time/Date Stamp
+        int symbol_ptr;     // Pointer to Symbol Table
+        int num_symbols;    // Number of Symbols
+        short nt_hdr_size;  // Optional Header Size
+        short flags; // characteristics
         short magic;
         unsigned char linker_major_version;
         unsigned char linker_minor_version;
@@ -263,7 +263,7 @@ typedef long long longlong;
         int import_by_ordinal : 1;
     };
 
-    struct DotNetCOR20Header
+    struct DotNetCOR20Header // CLI header
     {
         unsigned cb;
         unsigned short MajorRuntimeVersion;
