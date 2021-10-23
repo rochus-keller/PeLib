@@ -59,6 +59,14 @@ Method::Method(MethodSignature* Prototype, Qualifiers flags, bool entry) :
     if (!(flags_.Flags() & Qualifiers::Static))
         prototype_->Instance(true);
 }
+
+void Method::SetPInvoke(const std::string& name, Method::InvokeType type, const std::string& importName)
+{
+    invokeMode_ = PInvoke;
+    pInvokeName_ = name;
+    importName_ = importName;
+    pInvokeType_ = type;
+}
 void Method::Instance(bool instance)
 {
     if (instance)
@@ -264,6 +272,9 @@ bool Method::PEDump(Stream& peLib)
             MFlags |= MethodDefTableEntry::PinvokeImpl;
         }
         size_t nameIndex = peLib.PEOut().HashString(prototype_->Name());
+        size_t importNameIndex = nameIndex;
+        if( !importName_.empty() )
+            importNameIndex = peLib.PEOut().HashString(importName_);
         size_t paramIndex = peLib.PEOut().NextTableIndex(tParam);
 
         sig = SignatureGenerator::MethodDefSig(prototype_, sz);
@@ -290,7 +301,6 @@ bool Method::PEDump(Stream& peLib)
                 Flags |= ImplMapTableEntry::CallConvCdecl;
             else
                 Flags |= ImplMapTableEntry::CallConvStdcall;
-            size_t importName = nameIndex;
             size_t moduleName = peLib.PEOut().HashString(pInvokeName_);
             size_t moduleRef = peLib.moduleRefs[moduleName];
             if (moduleRef == 0)
@@ -300,7 +310,7 @@ bool Method::PEDump(Stream& peLib)
                 peLib.moduleRefs[moduleName] = moduleRef;
             }
             MemberForwarded methodIndex(MemberForwarded::MethodDef, prototype_->PEIndex());
-            ImplMapTableEntry* table = new ImplMapTableEntry(Flags, methodIndex, importName, moduleRef);
+            ImplMapTableEntry* table = new ImplMapTableEntry(Flags, methodIndex, importNameIndex, moduleRef);
             peLib.PEOut().AddTableEntry(table);
         }
         if ((prototype_->Flags() & MethodSignature::Vararg) && (prototype_->Flags() & MethodSignature::Managed))

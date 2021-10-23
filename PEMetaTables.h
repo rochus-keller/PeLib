@@ -1133,9 +1133,10 @@ namespace DotNetPELib {
         ImplMapTableEntry(int Flags, MemberForwarded MethodIndex, size_t ImportNameIndex, size_t ModuleIndex)
             : flags_(Flags), methodIndex_(MethodIndex), importNameIndex_(ImportNameIndex), moduleIndex_(ModuleIndex) {  }
         virtual int TableIndex() const override { return tImplMap; }
+        // see Lidin p. 338
         int flags_;
         MemberForwarded methodIndex_;
-        String importNameIndex_;
+        String importNameIndex_; // The name of the unmanaged method as it is defined in the export table of the unmanaged module
         ModuleRef moduleIndex_;
         virtual size_t Render(size_t sizes[MaxTables + ExtraIndexes], Byte *) const override;
         virtual size_t Get(size_t sizes[MaxTables + ExtraIndexes], Byte *) override;

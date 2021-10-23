@@ -49,12 +49,7 @@ namespace DotNetPELib
         Method(MethodSignature *Prototype, Qualifiers flags, bool entry = false);
 
         ///** Set Pinvoke DLL name
-        void SetPInvoke(const std::string& name, InvokeType type = Stdcall)
-        {
-            invokeMode_ = PInvoke;
-            pInvokeName_ = name;
-            pInvokeType_ = type;
-        }
+        void SetPInvoke(const std::string& name, InvokeType type = Stdcall, const std::string& importName = "");
         bool IsPInvoke() const { return invokeMode_ == PInvoke; }
 
         ///** Add a local variable
@@ -90,7 +85,7 @@ namespace DotNetPELib
         void CalculateLive();
         MethodSignature *prototype_;
         std::vector<Local *> varList_;
-        std::string pInvokeName_;
+        std::string pInvokeName_, importName_;
         InvokeMode invokeMode_;
         InvokeType pInvokeType_;
         int maxStack_;
