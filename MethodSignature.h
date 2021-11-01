@@ -92,7 +92,7 @@ namespace DotNetPELib
         void ArrayObject(Type *tp) { arrayObject_ = tp; }
 
         // iterate through parameters
-        typedef std::deque<Param *>::iterator iterator;
+        typedef std::deque<Param*>::iterator iterator;
         iterator begin() { return params.begin(); }
         iterator end() { return params.end(); }
         Param* getParam(int i , bool byOrdinal = false) const;
@@ -105,7 +105,7 @@ namespace DotNetPELib
         const std::deque<Type*>& Generic() const { return generic_; }
 
         // iterate through vararg parameters
-        typedef std::list<Param *>::iterator viterator;
+        typedef std::deque<Param*>::iterator viterator;
         viterator vbegin() { return varargParams_.begin(); }
         viterator vend() { return varargParams_.end(); }
 
@@ -162,7 +162,7 @@ namespace DotNetPELib
         std::string name_, display_name;
         int flags_;
         std::deque<Param*> params;
-        std::list<Param *> varargParams_;
+        std::deque<Param*> varargParams_;
         bool ref_;
         size_t peIndex_, peIndexCallSite_, peIndexType_;
         bool external_;

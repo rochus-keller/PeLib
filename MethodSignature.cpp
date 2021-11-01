@@ -212,7 +212,7 @@ bool MethodSignature::ILSrcDump(Stream& peLib, bool names, bool asType, bool PIn
             if (varargParams_.size())
             {
                 peLib.Out() << ", ";
-                for (std::list<Param*>::const_iterator it = varargParams_.begin(); it != varargParams_.end();)
+                for (std::deque<Param*>::const_iterator it = varargParams_.begin(); it != varargParams_.end();)
                 {
                     (*it)->GetType()->ILSrcDump(peLib);
                     ++it;
@@ -336,13 +336,14 @@ bool MethodSignature::PEDump(Stream& peLib, bool asType)
     {
         size_t sz;
         size_t function = peLib.PEOut().HashString(name_);
-        size_t parent = methodParent_ ? methodParent_->PEIndex() : 0;
-        MemberRefParent memberRef(MemberRefParent::MethodDef, parent);
+        size_t parentIndex = methodParent_ ? methodParent_->PEIndex() : 0;
         Byte* sig = SignatureGenerator::MethodRefSig(this, sz);
         size_t methodSignature = peLib.PEOut().HashBlob(sig, sz);
         delete[] sig;
-        TableEntryBase* table = new MemberRefTableEntry(memberRef, function, methodSignature);
-        peIndexCallSite_ = peLib.PEOut().AddTableEntry(table);
+        peIndexCallSite_ = peLib.PEOut().AddTableEntry(
+                    new MemberRefTableEntry(
+                        MemberRefParent(MemberRefParent::MethodDef, parentIndex),
+                        function, methodSignature) );
     }
     else if (!peIndexCallSite_)
     {
