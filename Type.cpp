@@ -184,6 +184,8 @@ size_t Type::Render(Stream& peLib, Byte* result)
     switch (tp_)
     {
         case ClassRef:
+#if 1
+        // original
             if (typeRef_->InAssemblyRef())
             {
                 typeRef_->PEDump(peLib);
@@ -209,6 +211,29 @@ size_t Type::Render(Stream& peLib, Byte* result)
                     *(int*)result = typeRef_->PEIndex() | (tTypeDef << 24);
                 }
             }
+#else
+            // RK: this version works for NAppGui Test3 for array n of *C.Thread;
+            // the one above generates newarr [NAppCore]NAppCore/Thread,
+            // this one correctly newarr [NAppCore]NAppCore/Thread*
+            // but it fails for NAppGui Fractals with an invalid assembly! TODO
+            if (typeRef_->InAssemblyRef())
+                typeRef_->PEDump(peLib);
+            if (showType_)
+            {
+                if (!peIndex_)
+                {
+                    size_t sz;
+                    Byte* sig = SignatureGenerator::TypeSig(this, sz);
+                    size_t signature = peLib.PEOut().HashBlob(sig, sz);
+                    delete[] sig;
+                    TypeSpecTableEntry* table = new TypeSpecTableEntry(signature);
+                    peIndex_ = peLib.PEOut().AddTableEntry(table);
+                }
+                *(int*)result = peIndex_ | (tTypeSpec << 24);
+            }
+            else
+                *(int*)result = typeRef_->PEIndex() | (tTypeDef << 24);
+#endif
             return 4;
             break;
         case MethodRef:

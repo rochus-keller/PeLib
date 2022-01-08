@@ -72,8 +72,11 @@ size_t SignatureGenerator::EmbedType(int* buf, int offset, Type* tp)
     if (tp->ByRef())
         buf[offset + rv++] = ELEMENT_TYPE_BYREF;
 
+#if 0
+    // when this is here instead of below we get a "type[]*" if tp has both pointer and array level.
     for (int i = 0; i < tp->PointerLevel(); i++)
         buf[offset + rv++] = ELEMENT_TYPE_PTR;
+#endif
 
     if (tp->ArrayLevel())
     {
@@ -91,6 +94,13 @@ size_t SignatureGenerator::EmbedType(int* buf, int offset, Type* tp)
             buf[offset + rv++] = ELEMENT_TYPE_SZARRAY;
 #endif
     }
+
+#if 1
+    // with this order we get a "type*[]" if tp has both pointer and array level.
+    for (int i = 0; i < tp->PointerLevel(); i++)
+        buf[offset + rv++] = ELEMENT_TYPE_PTR;
+#endif
+
     switch (tp->GetBasicType())
     {
         case Type::object:
