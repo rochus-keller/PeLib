@@ -169,11 +169,21 @@ bool Method::PEDump(Stream& peLib)
         size_t methodSignature = 0;
         Byte* sig = nullptr;
         TableEntryBase* table;
-        if (prototype_->ReturnType() && prototype_->ReturnType()->GetBasicType() == Type::ClassRef)
+        if( prototype_->ReturnType() )
         {
-            if (prototype_->ReturnType()->GetClass()->InAssemblyRef())
+            if ( prototype_->ReturnType()->GetBasicType() == Type::ClassRef)
             {
-                prototype_->ReturnType()->GetClass()->PEDump(peLib);
+                if (prototype_->ReturnType()->GetClass()->InAssemblyRef())
+                {
+                    prototype_->ReturnType()->GetClass()->PEDump(peLib);
+                }
+            }
+            if( prototype_->ReturnType()->Modopt() && prototype_->ReturnType()->Modopt()->GetBasicType() == Type::ClassRef )
+            {
+                if (prototype_->ReturnType()->Modopt()->GetClass()->InAssemblyRef())
+                {
+                    prototype_->ReturnType()->Modopt()->GetClass()->PEDump(peLib);
+                }
             }
         }
         if (prototype_->ParamCount())

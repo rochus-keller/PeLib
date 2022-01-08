@@ -276,6 +276,13 @@ bool MethodSignature::PEDump(Stream& peLib, bool asType)
                     returnType_->GetClass()->PEDump(peLib);
                 }
             }
+            if (returnType_ && returnType_->Modopt() && returnType_->Modopt()->GetBasicType() == Type::ClassRef)
+            {
+                if (returnType_->Modopt()->GetClass()->InAssemblyRef())
+                {
+                    returnType_->Modopt()->GetClass()->PEDump(peLib);
+                }
+            }
 
             for(Param* param : params)
             {
@@ -356,6 +363,13 @@ bool MethodSignature::PEDump(Stream& peLib, bool asType)
             if (returnType_->GetClass()->InAssemblyRef())
             {
                 returnType_->GetClass()->PEDump(peLib);
+            }
+        }
+        if (returnType_ && returnType_->Modopt() && returnType_->Modopt()->GetBasicType() == Type::ClassRef)
+        {
+            if (returnType_->Modopt()->GetClass()->InAssemblyRef())
+            {
+                returnType_->Modopt()->GetClass()->PEDump(peLib);
             }
         }
         if (arrayObject_)

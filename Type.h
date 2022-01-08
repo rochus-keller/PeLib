@@ -54,8 +54,10 @@ namespace DotNetPELib
         };
 
         Type(BasicType Tp, int PointerLevel = 0);
-        Type(DataContainer *clsref) : tp_(ClassRef), pointerLevel_(0), arrayLevel_(0), byRef_(false), typeRef_(clsref), methodRef_(nullptr), peIndex_(0), pinned_(false), showType_(false), varnum_(0){}
-        Type(MethodSignature *methodref) : tp_(MethodRef), pointerLevel_(0), arrayLevel_(0), byRef_(false), typeRef_(nullptr),
+        Type(DataContainer *clsref) : tp_(ClassRef), pointerLevel_(0), arrayLevel_(0), byRef_(false), typeRef_(clsref),
+            methodRef_(nullptr), peIndex_(0), pinned_(false), showType_(false), varnum_(0),modopt_(0){}
+        Type(MethodSignature *methodref) : tp_(MethodRef), pointerLevel_(0), arrayLevel_(0), byRef_(false),
+            typeRef_(nullptr), modopt_(0),
             methodRef_(methodref), peIndex_(0), pinned_(false), showType_(false), varnum_(0){}
 
         ///** Get/set the type of the Type object
@@ -96,6 +98,8 @@ namespace DotNetPELib
         void PEIndex(size_t val) { peIndex_ = val; }
         bool Pinned() { return pinned_; }
         void Pinned(bool pinned) { pinned_ = pinned; }
+        Type* Modopt() { return modopt_; }
+        void Modopt(Type * m) { modopt_ = m; }
     protected:
         bool pinned_;
         int pointerLevel_;
@@ -105,6 +109,7 @@ namespace DotNetPELib
         BasicType tp_;
         DataContainer *typeRef_;
         MethodSignature *methodRef_;
+        Type *modopt_;
         size_t peIndex_;
         bool showType_;
     private:

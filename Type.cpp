@@ -46,7 +46,8 @@ const char* BoxedType::typeNames_[] = {"",        "",       "",       "", "", "B
                                        "Int16",   "UInt16", "Int32",  "UInt32", "Int64", "UInt64", "IntPtr",
                                        "UIntPtr", "Single", "Double", "Object", "String"};
 
-Type::Type(Type::BasicType Tp, int PointerLevel) : tp_(Tp), arrayLevel_(0), byRef_(false), typeRef_(nullptr), methodRef_(nullptr), peIndex_(0), pinned_(false), showType_(false), varnum_(0)
+Type::Type(Type::BasicType Tp, int PointerLevel) : tp_(Tp), arrayLevel_(0), byRef_(false), typeRef_(nullptr),
+    methodRef_(nullptr), peIndex_(0), pinned_(false), showType_(false), varnum_(0),modopt_(0)
 {
     if (Tp == TypeVar || Tp == MethodParam)
         varnum_ = PointerLevel;

@@ -33,7 +33,7 @@
 #include "Property.h"
 #include "Method.h"
 #include "PEMetaTables.h"
-
+#include <cassert>
 
 namespace DotNetPELib
 {
@@ -66,6 +66,23 @@ int SignatureGenerator::objectBase;
 size_t SignatureGenerator::EmbedType(int* buf, int offset, Type* tp)
 {
     int rv = 0;
+    if( tp->Modopt() && tp->Modopt()->GetBasicType() == Type::ClassRef )
+    {
+        // ELEMENT_TYPE_CMOD_OPT (typeRef)
+        // to realize modopt([mscorlib]System.Runtime.CompilerServices.CallConvCdecl)
+        // placed on the return type of the delegates Invoke signature
+        buf[offset + rv++] = ELEMENT_TYPE_CMOD_OPT;
+        Class* cls = static_cast<Class*>(tp->Modopt()->GetClass());
+        assert(cls);
+        // cannot use EmbedType here becode it would add ELEMENT_TYPE_CLASS
+        if( cls->PEIndex() == 0 )
+            std::cerr << "SignatureGenerator::EmbedType classRef with no PEIndex" << std::endl;
+        if (cls->InAssemblyRef())
+            buf[offset + rv++] = (cls->PEIndex() << 2) | TypeDefOrRef::TypeRef;
+        else
+            buf[offset + rv++] = (cls->PEIndex() << 2) | TypeDefOrRef::TypeDef;
+    }
+
     if (tp->Pinned())
         buf[offset + rv++] = ELEMENT_TYPE_PINNED;
 
@@ -132,6 +149,8 @@ size_t SignatureGenerator::EmbedType(int* buf, int offset, Type* tp)
             {
                 buf[offset + rv++] = ELEMENT_TYPE_CLASS;
             }
+            if( cls1->PEIndex() == 0 )
+                std::cerr << "SignatureGenerator::EmbedType classRef with no PEIndex" << std::endl;
             if (cls1->InAssemblyRef())
             {
                 buf[offset + rv++] = (cls1->PEIndex() << 2) | TypeDefOrRef::TypeRef;
