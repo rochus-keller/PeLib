@@ -185,7 +185,7 @@ size_t Type::Render(Stream& peLib, Byte* result)
     switch (tp_)
     {
         case ClassRef:
-#if 1
+#if 0
         // original
             if (typeRef_->InAssemblyRef())
             {
@@ -213,11 +213,11 @@ size_t Type::Render(Stream& peLib, Byte* result)
                 }
             }
 #else
-            // RK: this version works for NAppGui Test3 for array n of *C.Thread;
+        {
             // the one above generates newarr [NAppCore]NAppCore/Thread,
             // this one correctly newarr [NAppCore]NAppCore/Thread*
-            // but it fails for NAppGui Fractals with an invalid assembly! TODO
-            if (typeRef_->InAssemblyRef())
+            const bool isRef = typeRef_->InAssemblyRef();
+            if (isRef)
                 typeRef_->PEDump(peLib);
             if (showType_)
             {
@@ -232,8 +232,11 @@ size_t Type::Render(Stream& peLib, Byte* result)
                 }
                 *(int*)result = peIndex_ | (tTypeSpec << 24);
             }
+            else if( isRef )
+                *(int*)result = typeRef_->PEIndex() | (tTypeRef << 24);
             else
                 *(int*)result = typeRef_->PEIndex() | (tTypeDef << 24);
+        }
 #endif
             return 4;
             break;
