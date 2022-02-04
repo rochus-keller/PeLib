@@ -119,7 +119,8 @@ Param*MethodSignature::getParam(int i, bool byOrdinal) const
         if( (*j)->Index() == i )
             return (*j);
     }
-    assert(false);
+    // No, we land here in case of e.g. ldarga.s 0 in a virtual function
+    // assert(false);
     return 0;
 }
 

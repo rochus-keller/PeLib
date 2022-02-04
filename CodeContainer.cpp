@@ -161,7 +161,7 @@ void CodeContainer::BaseTypes(int& types) const
         for (auto instruction : instructions_)
         {
             Operand* op = instruction->GetOperand();
-            if (op && op->OperandType() == Operand::t_value)
+            if (op && op->OperandType() == Operand::t_value && op->GetValue() )
             {
                 if (typeid(*op->GetValue()) == typeid(Value))
                 {
@@ -438,7 +438,8 @@ void CodeContainer::ValidateInstructions()
                 case Instruction::i_ldarg:
                 case Instruction::i_ldarga:
                 case Instruction::i_starg:
-                    if (((Param*)instruction->GetOperand()->GetValue())->Index() > 65534)
+                    if (instruction->GetOperand()->GetValue() &&
+                            ((Param*)instruction->GetOperand()->GetValue())->Index() > 65534)
                     {
                         throw PELibError(PELibError::IndexOutOfRange, ((Param*)instruction->GetOperand()->GetValue())->Name());
                     }
@@ -446,7 +447,8 @@ void CodeContainer::ValidateInstructions()
                 case Instruction::i_ldarg_s:
                 case Instruction::i_ldarga_s:
                 case Instruction::i_starg_s:
-                    if (((Param*)instruction->GetOperand()->GetValue())->Index() > 255)
+                    if (instruction->GetOperand()->GetValue() &&
+                            ((Param*)instruction->GetOperand()->GetValue())->Index() > 255)
                     {
                         throw PELibError(PELibError::IndexOutOfRange, ((Param*)instruction->GetOperand()->GetValue())->Name());
                     }
@@ -454,7 +456,8 @@ void CodeContainer::ValidateInstructions()
                 case Instruction::i_ldloc:
                 case Instruction::i_ldloca:
                 case Instruction::i_stloc:
-                    if (((Local*)instruction->GetOperand()->GetValue())->Index() > 65534)
+                    if (instruction->GetOperand()->GetValue() &&
+                            ((Local*)instruction->GetOperand()->GetValue())->Index() > 65534)
                     {
                         throw PELibError(PELibError::IndexOutOfRange, ((Local*)instruction->GetOperand()->GetValue())->Name());
                     }
@@ -462,7 +465,8 @@ void CodeContainer::ValidateInstructions()
                 case Instruction::i_ldloc_s:
                 case Instruction::i_ldloca_s:
                 case Instruction::i_stloc_s:
-                    if (((Local*)instruction->GetOperand()->GetValue())->Index() > 255)
+                    if (instruction->GetOperand()->GetValue() &&
+                            ((Local*)instruction->GetOperand()->GetValue())->Index() > 255)
                     {
                         throw PELibError(PELibError::IndexOutOfRange, ((Local*)instruction->GetOperand()->GetValue())->Name());
                     }

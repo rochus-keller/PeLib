@@ -99,7 +99,7 @@ namespace DotNetPELib
             Byte op2;
             Byte bytes;
             Byte operandType;
-            char stackUsage; // positive it adds to stack, negative it consumes stack
+            int8_t stackUsage; // positive it adds to stack, negative it consumes stack
         };
         static InstructionName instructions_[];
 

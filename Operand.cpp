@@ -128,7 +128,8 @@ bool Operand::isnanorinf() const
 }
 Operand::Operand(Value* V):type_(t_value), refValue_(V), property_(false), sz_(i8), intValue_(0), floatValue_(0)
 {
-    assert( V != 0 );
+    // No, we allow zero V to accomodate for 'this' params
+    // assert( V != 0 );
 }
 
 bool Operand::ILSrcDump(Stream& peLib) const
@@ -138,7 +139,8 @@ bool Operand::ILSrcDump(Stream& peLib) const
         case t_none:  // no operand, nothing to display
             break;
         case t_value:
-            refValue_->ILSrcDump(peLib);
+            if( refValue_ )
+                refValue_->ILSrcDump(peLib);
             break;
         case t_int:
             peLib.Out() << intValue_;
@@ -192,7 +194,8 @@ size_t Operand::Render(Stream& peLib, int opcode, int operandType, Byte* result)
             // shouldn't be rendered...
             break;
         case t_value:
-            sz = refValue_->Render(peLib, opcode, operandType, result);
+            if( refValue_ )
+                sz = refValue_->Render(peLib, opcode, operandType, result);
             break;
         case t_int:
             switch (operandType)
