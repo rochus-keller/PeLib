@@ -25,7 +25,9 @@
 
 #include "Stream.h"
 #include "PELib.h"
+#ifdef QT_CORE_LIB
 #include <QtDebug>
+#endif
 using namespace DotNetPELib;
 
 Stream::Stream(std::iostream* s):outputStream_(s),peWriter_(0),peLib_(0)

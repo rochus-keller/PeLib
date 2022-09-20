@@ -234,7 +234,9 @@ bool Method::PEDump(Stream& peLib)
         if( invokeMode_ == CIL && !isRuntime )
             peflags |= PEMethod::CIL;
 
+#ifdef QT_CORE_LIB
         Q_ASSERT( rendering_ == 0 );
+#endif
         rendering_ = new PEMethod( hasSEH_, peflags,
                                   peLib.PEOut().NextTableIndex(tMethodDef), maxStack_, varList_.size(),
                                   last ? last->Offset() + last->InstructionSize() : 0,

@@ -30,6 +30,7 @@
 #include "sha1.h"
 #include <time.h>
 #include <stdio.h>
+#include <string.h>
 #include <iostream>
 #include <cassert>
 #ifdef QT_CORE_LIB

@@ -30,6 +30,7 @@
 #include <map>
 #include <list>
 #include <string>
+#include <stdint.h>
 
 namespace DotNetPELib
 {
