@@ -1,4 +1,5 @@
 
+# NOTE that this builds PeLib without Qt support! Look for QT_CORE_LIB ifdefs.
 let sources * : SourceSet {
 	.sources = [
 		./AssemblyDef.cpp 
