@@ -12,7 +12,7 @@ Added headers to decouple concerns. Added Stream class to remove PELib circular 
 
 Many fixes.
 
-The code is known to work on Linux and Windows. The generated assemblies work with both .NET Core and Mono.
+The code is known to work on Linux, Mac and Windows. The generated assemblies work with both .NET Core and Mono.
 
 This is work in progress.
 

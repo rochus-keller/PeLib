@@ -45,7 +45,9 @@ HEADERS += \
     $$PWD/PEMetaTables.h \
     $$PWD/SEHData.h \
     $$PWD/PEWriter_Private.h \
-    $$PWD/Stream.h
+    $$PWD/Stream.h \
+    $$PWD/ObxIlEmitter.h \
+    $$PWD/ObxPelibGen.h
 
 SOURCES += \
     $$PWD/AssemblyDef.cpp \
@@ -74,4 +76,6 @@ SOURCES += \
     $$PWD/Value.cpp \
     $$PWD/Resource.cpp \ 
     $$PWD/PEMetaTables.cpp \
-    $$PWD/Stream.cpp
+    $$PWD/Stream.cpp \
+    $$PWD/CilIlEmitter.cpp \
+    $$PWD/CilPelibGen.cpp

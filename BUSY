@@ -1,35 +1,45 @@
 
+let files = [
+        ./AssemblyDef.cpp
+        ./bigdigits.cpp
+        ./Class.cpp
+        ./CodeContainer.cpp
+        ./CreateGUID.cpp
+        ./CustomAttributeContainer.cpp
+        ./DataContainer.cpp
+        ./Enum.cpp
+        ./Field.cpp
+        ./Instruction.cpp
+        ./Method.cpp
+        ./MethodSignature.cpp
+        ./Namespace.cpp
+        ./SignatureGenerator.cpp
+        ./Operand.cpp
+        ./PELib.cpp
+        ./PELibError.cpp
+        ./PEWriter.cpp
+        ./Property.cpp
+        ./Qualifiers.cpp
+        ./RSAEncoder.cpp
+        ./sha1.cpp
+        ./Type.cpp
+        ./Value.cpp
+        ./Resource.cpp
+        ./PEMetaTables.cpp
+        ./Stream.cpp
+    ]
+
+let config_qt : Config {
+    .include_dirs += ..
+    .defines += [ "HAVE_C99INCLUDES" "QT_CORE_LIB" ]
+    if (target_toolchain == `gcc) || (target_toolchain == `clang) {
+        .cflags_cc += "-std=c++11"
+    }
+}
+
 # NOTE that this builds PeLib without Qt support! Look for QT_CORE_LIB ifdefs.
 let sources * : SourceSet {
-	.sources = [
-		./AssemblyDef.cpp 
-		./bigdigits.cpp 
-		./Class.cpp 
-		./CodeContainer.cpp 
-		./CreateGUID.cpp 
-		./CustomAttributeContainer.cpp 
-		./DataContainer.cpp 
-		./Enum.cpp 
-		./Field.cpp 
-		./Instruction.cpp 
-		./Method.cpp 
-		./MethodSignature.cpp 
-		./Namespace.cpp 
-		./SignatureGenerator.cpp 
-		./Operand.cpp 
-		./PELib.cpp 
-		./PELibError.cpp 
-		./PEWriter.cpp 
-		./Property.cpp 
-		./Qualifiers.cpp 
-		./RSAEncoder.cpp 
-		./sha1.cpp 
-		./Type.cpp 
-		./Value.cpp 
-		./Resource.cpp  
-		./PEMetaTables.cpp 
-		./Stream.cpp
-	]
+
 	.defines += "HAVE_C99INCLUDES"
 	.include_dirs += ..
 	if (target_toolchain == `gcc) || (target_toolchain == `clang) {
